@@ -93,7 +93,7 @@
   <div id="flash"></div>
   <div id="fade"></div>
   <div id="hud">
-    <div class="stat" id="fuelBox"><span class="lbl">Топливо</span><span class="val" id="fuelVal">3:00</span><div id="fuelBar"><i id="fuelFill" style="width:75%"></i></div><span class="lbl" style="margin-top:8px">Мгновенный расход <b id="rateVal" style="color:var(--ink)">×0.4</b></span><div id="rateBar"><i id="rateFill" style="width:18%"></i></div></div>
+    <div class="stat" id="fuelBox"><span class="lbl">Топлива на</span><span class="val" id="fuelVal">1.7 км</span><div id="fuelBar"><i id="fuelFill" style="width:75%"></i></div><span class="lbl" style="margin-top:8px">Мгновенный расход <b id="rateVal" style="color:var(--ink)">×0.4</b></span><div id="rateBar"><i id="rateFill" style="width:18%"></i></div><span class="lbl" style="margin-top:8px">До заправки <b id="stVal" style="color:var(--ink)">не видно</b></span></div>
     <div id="center">
       <span class="lbl">Проехал</span><span class="val" id="odo" style="font-size:clamp(26px,4.6vw,44px);color:var(--accent)">0.00 км</span>
       <span class="lbl" id="ctxLbl">Скорость</span><span class="val" id="ctxVal">0 км/ч</span>
@@ -922,6 +922,25 @@
     bollPost.instanceMatrix.needsUpdate = true; bollBand.instanceMatrix.needsUpdate = true;
     if (G.mode === 'drive' && Math.abs(G.speed) > 1) for (const side of [-1, 1]) { if (Math.abs(side*6.55 - G.x) > 1.25) continue; for (let k = Math.ceil((G.dist - 2.6)/BOLL_STEP); k <= Math.floor((G.dist + 2.6)/BOLL_STEP); k++) { const S = k*BOLL_STEP, d = S - G.dist; if (!vis(side, k, d, S)) continue; bollBroken.set(side + ':' + k, S); const g = makeBollard(); scene.add(g); g.position.set(side*6.55, .12, -d); launch(g, new THREE.Vector3(side*rand(2, 5), rand(4, 7), rand(3, 7))); sfx.knock(); G.shake = Math.max(G.shake, .1); for (let i = 0; i < 8; i++) chunk(.06, .06, .06, sparkMat, side*6.55 - player.position.x + rand(-.3, .3), rand(.2, .9), -d + rand(-.4, .4), new THREE.Vector3(side*rand(1, 5), rand(2, 6), rand(2, 8))); } }   /* a bollard you clip flies off in sparks; the car does not notice */
     for (const [key, S] of bollBroken) if (S < G.dist - 60) bollBroken.delete(key);
+  }
+  // wires: between lamps along the pavement, between neighbouring houses, and across the street from facade to facade. Plain lines, resampled along the track every frame
+  const powerMat = new THREE.LineBasicMaterial({color:col(0x121216)}), wirePool = [];
+  function getWire(i){ while (wirePool.length <= i) { const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(11*3), 3)); const l = new THREE.Line(g, powerMat); l.frustumCulled = false; world.add(l); wirePool.push(l); } return wirePool[i]; }
+  function setWire(l, d0, lat0, h0, d1, lat1, h1, sag){ const a = l.geometry.attributes.position.array; for (let k = 0; k <= 10; k++) { const t = k/10, d = d0 + (d1 - d0)*t, lat = lat0 + (lat1 - lat0)*t, p = sampleAt(d), c = Math.cos(p.th), sn = Math.sin(p.th); a[k*3] = p.x + lat*c; a[k*3 + 1] = p.y + h0 + (h1 - h0)*t - sag*4*t*(1 - t); a[k*3 + 2] = p.z + lat*sn; } l.geometry.attributes.position.needsUpdate = true; l.visible = true; }
+  function updateWires(){
+    let n = 0;
+    if (biomeAt(G.dist) === 'city') {
+      const inJunction = d => crossings.some(c => Math.abs(d - c.dist) < c.half + 14) || (G.st && d > G.st.dist - G.st.group.userData.tail - 10 && d < G.st.dist + 10);
+      for (const side of [-1, 1]) {
+        const lamps = decor.filter(e => e.kind === 'lamp' && e.side === side && e.m.visible && !e.hit && e.dist > -60 && e.dist < 320).sort((a, b) => a.dist - b.dist);
+        for (let i = 0; i + 1 < lamps.length; i++) { const a = lamps[i], b = lamps[i + 1]; if (b.dist - a.dist > 40) continue; setWire(getWire(n++), a.dist, a.lat, 6.4, b.dist, b.lat, 6.4, .9); }
+        const houses = decor.filter(e => e.row === 1 && e.side === side && e.m.visible && e.dist > -60 && e.dist < 320).sort((a, b) => a.dist - b.dist);
+        for (let i = 0; i + 1 < houses.length; i++) { const a = houses[i], b = houses[i + 1], d0 = a.dist + a.d/2, d1 = b.dist - b.d/2; if (d1 - d0 > 45 || d1 - d0 < 2) continue; setWire(getWire(n++), d0, side*12.7, 8.5, d1, side*12.7, 8.5, 1.0); }
+      }
+      const L = decor.filter(e => e.row === 1 && e.side === -1 && e.m.visible && e.dist > -40 && e.dist < 300), R = decor.filter(e => e.row === 1 && e.side === 1 && e.m.visible && e.dist > -40 && e.dist < 300);
+      for (const a of L) { const b = R.find(h => Math.abs(h.dist - a.dist) < (h.d + a.d)/2 - 8); if (!b) continue; const d = Math.max(a.dist - a.d/2, b.dist - b.d/2) + 5; if (d > Math.min(a.dist + a.d/2, b.dist + b.d/2) - 3 || inJunction(d)) continue; setWire(getWire(n++), d, -12.7, 9.2, d, 12.7, 9.2, 1.5); }
+    }
+    for (let i = n; i < wirePool.length; i++) wirePool[i].visible = false;
   }
   function updateRail(e){ if (e.broken && e.dist - e.d/2 > 60) { for (const sg of e.segs) if (sg.gone) { sg.m = e.kind === 'rail' ? makeRailSeg() : makeBollard(); world.add(sg.m); sg.gone = false; } e.broken = false; } for (const sg of e.segs) { if (sg.gone) continue; sg.m.visible = e.m.visible; if (e.m.visible) place(sg.m, e.dist + sg.u, e.lat, 0); } }
   for (let i = 0; i < 12; i++) { const side = i % 2 ? 1 : -1, g = makeGarages(); world.add(g); decor.push({m:g, side, row:0, d:0, dist:-20 + Math.random()*320, lat:side*rand(25, 30), yaw:0}); }
@@ -1812,7 +1831,7 @@
       Object.assign(PF, {x:-2.6, hp:100, maxHp:100, state:'idle', vx:0, atk:null, stun:0, fall:0, blocking:false, y:0, vy:0, air:false, airVx:0}); PF.root.rotation.z = 0; PF.root.position.y = 0; PF.target = Object.assign({}, POSE.guard);
       EF.root.rotation.z = 0; EF.root.position.y = 0; AI.d = d; AI.think = .6; AI.counter = false; EF.combo = 0; EF.skill = d.block; PF.skill = .25; EF.comboLimit = Math.max(1, Math.min(4, Math.round(4.2 - d.block*6))); PF.combo = 0;
       $('fightBars').style.display = 'grid'; $('board').style.display = 'none'; $('enemyName').textContent = d.name.toUpperCase();
-      $('ctxLbl').textContent = 'Водитель вышел'; $('ctxVal').textContent = '«' + d.bark + '»';
+      $('ctxLbl').style.display = ''; $('ctxVal').style.display = ''; $('ctxLbl').textContent = 'Водитель вышел'; $('ctxVal').textContent = '«' + d.bark + '»';
       setPad('fight'); prompt('<kbd>← →</kbd> шаг · <kbd>Space</kbd> прыжок · <kbd>J</kbd> удар · <kbd>K</kbd> пинок · <kbd>L</kbd> блок');
       announce(d.name.toUpperCase(), '', 1300, 'вышел разбираться');
       setTimeout(() => { if (F.phase === 'intro') { F.phase = 'fight'; announce('БЕЙ!', 'good', 600); } }, 1500);
@@ -1837,12 +1856,14 @@
   }
 
   // ---- HUD / pad ----
+  function rangeText(){ if (CAR.cart) return '—'; const v = Math.abs(G.speed); let rate, sp; if (v > 3 && G.rate > .05) { rate = G.rate; sp = v; } else { const vv = Math.min(1, (60/3.6)/MAX_SPEED); sp = 60/3.6; rate = (CAR.fuelMul || 1)*(RATE_IDLE + .3 + 2.8*Math.pow(1 - vv, 1.5) + .9*Math.pow(vv, 1.6)); } const km = G.fuel/rate*sp/1000; return (km < 10 ? km.toFixed(1) : Math.round(km)) + ' км'; }   /* how far the tank takes you: at the current burn when moving, otherwise at a 60 km/h cruise */
+  function stationText(){ const d = G.st ? G.st.dist : G.fork ? G.fork.dist + 228 : null; if (d === null) return 'не видно'; if (d < -20) return 'проехали'; return d < 1000 ? Math.max(0, Math.round(d/10)*10) + ' м' : (d/1000).toFixed(1) + ' км'; }
   function updateHud(){
-    $('fuelVal').textContent = fmt(G.fuel); $('fuelVal').classList.toggle('low', G.fuel < 30);
+    $('fuelVal').textContent = rangeText(); $('fuelVal').classList.toggle('low', G.fuel < 30); $('stVal').textContent = stationText();
     $('rateVal').textContent = '×' + G.rate.toFixed(1); $('rateFill').style.width = Math.min(100, G.rate/3.5*100) + '%';
     const fill = $('fuelFill'); fill.style.width = (G.fuel/G.maxFuel*100) + '%'; fill.className = G.fuel < 30 ? 'low' : G.fuel < 75 ? 'mid' : '';
     $('fills').textContent = G.fills; $('fightsWon').textContent = G.fights; $('odo').textContent = (Math.max(0, G.dist)/1000).toFixed(2) + ' км';
-    if (G.mode !== 'fight') { $('ctxLbl').textContent = 'Скорость'; $('ctxVal').textContent = Math.round(Math.abs(G.speed)*3.6) + ' км/ч' + (G.speed < -.2 ? ' назад' : ''); }
+    if (G.mode !== 'fight') { $('ctxLbl').style.display = 'none'; $('ctxVal').style.display = 'none'; }   /* no speedometer: the road tells you */
     else if (EF) { $('hpP').style.width = (PF.hp/PF.maxHp*100) + '%'; $('hpE').style.width = (EF.hp/EF.maxHp*100) + '%'; }
   }
   const PADS = {
@@ -1952,7 +1973,7 @@
     }
     const tailZ = cars.length ? cars[cars.length - 1].z : 0;
     for (const e of st.q) {
-      if (e.gone) { const atMerge = e.z < U.front - 10, blocked = atMerge && obstacles.some(o => o.kind === 'car' && Math.abs(o.lat - 4*side) < 2.2 && Math.abs(o.dist - (st.dist - e.z)) < 14); if (!blocked) e.z -= 12*dt; if (e.z < U.front + 24) e.x += (4*side - e.x)*Math.min(1, dt*2.2); e.mesh.position.set(e.x, 0, e.z);
+      if (e.gone) { const atMerge = e.z < U.front - 10, blocked = atMerge && (obstacles.some(o => o.kind === 'car' && Math.abs(o.lat - 4*side) < 2.2 && Math.abs(o.dist - (st.dist - e.z)) < 14) || (Math.abs(G.x - 4*side) < 3.2 && Math.abs(st.dist - e.z) < 18));   /* and never pull out into you */ if (!blocked) e.z -= 12*dt; if (e.z < U.front + 24) e.x += (4*side - e.x)*Math.min(1, dt*2.2); e.mesh.position.set(e.x, 0, e.z);
         if (atMerge && !blocked && !e.removed) { e.removed = true; st.group.remove(e.mesh); world.add(e.mesh); obstacles.push({mesh:e.mesh, kind:'car', speed:12, base:12, halfL:e.halfL, halfW:.98, dist:st.dist - e.z, lat:4*side, yaw:0}); } }
       else if (e.arriving) {
         let lastZ = cars.length ? cars[cars.length - 1].z : 0; for (const o of st.q) if (o.detour && o.z > lastZ - 1 && o.z < e.z) lastZ = Math.max(lastZ, o.z); let target = lastZ + SPACING; if (inLane && pz > lastZ && pz < e.z) target = Math.max(target, pz + PLAYER_HALF + e.halfL + 1.2);
@@ -1977,7 +1998,7 @@
     // ---- queue cars are solid: nose into a bumper and you stop, slide into a flank and you get shoved out ----
     G.bumpCool = Math.max(0, G.bumpCool - dt);
     for (const e of st.q) {
-      if (e.gone && e.z < -20) continue;
+      if (e.gone) continue;   /* a car that is leaving is not a wall: it waits for you at the exit instead */
       const dx = G.x - e.x, dz = pz - e.z, hw = .98 + player.userData.halfW, hl = e.halfL + PLAYER_HALF;
       if (Math.abs(dx) >= hw || Math.abs(dz) >= hl) continue;
       // any touch of a car in the queue, anywhere, at any speed: its driver gets out. Behind you: you take his place; ahead of you: you stop in the lane
@@ -2167,7 +2188,7 @@
       }
       for (const c of crossings) for (const k of c.group.children) if (k.userData.win) fadeWindows(k, (c.rb ? c.d0 : c.dist) - k.position.z);
       if (G.st) for (const k of G.st.group.children) if (k.userData.win) fadeWindows(k, G.st.dist - k.position.z);
-      updateCrossings(dt, dz); updateDecorVisibility(); updateBollards(dt); reapWorkers(); updateFillers(); updateDebris(dt); updatePeds(dt, dz);
+      updateCrossings(dt, dz); updateDecorVisibility(); updateWires(); updateBollards(dt); reapWorkers(); updateFillers(); updateDebris(dt); updatePeds(dt, dz);
       // traffic knocks cones over too
       if (m === 'drive') for (let i = obstacles.length - 1; i >= 0; i--) { const cn = obstacles[i]; if (cn.kind !== 'cone') continue;
         const car = obstacles.find(o => o.kind === 'car' && !o.parked && o.speed > 2 && Math.abs(o.lat - cn.lat) < 1.25 && Math.abs(o.dist - cn.dist) < o.halfL + .4);
@@ -2217,7 +2238,7 @@
             if (o.open && !o.hit && G.py <= 0) { o.hit = true; const lid = om.userData.lid; om.remove(lid); lid.position.set(om.position.x, .4, om.position.z); scene.add(lid); launch(lid, new THREE.Vector3(rand(-2, 2), rand(9, 12), rand(6, 9))); G.pvy = 5.5*Math.max(.3, CAR.tough); G.py = .01; sfx.bump(); crash(.9); for (let i = 0; i < 18; i++) chunk(.06, .06, .06, sparkMat, om.position.x - player.position.x + rand(-.5, .5), .2, om.position.z + rand(-.6, .6), new THREE.Vector3(rand(-6, 6), rand(2, 6), rand(3, 10))); }
             else if (!o.open && !o.hit) { o.hit = true; sfx.bump(); G.shake = Math.max(G.shake, .15); }
           }
-          else if (o.kind === 'car' && !o.bike && !o.bus && (oz < o.halfL + 1.0 || ox > o.halfW + .2)) {   /* flank to flank, or my corner on his corner while overtaking: paint, not metal */ const sd = Math.sign(G.x - o.lat) || 1; G.x += sd*dt*4; if (!o.parked) o.lat -= sd*dt*1.5; if (G.hitCool <= 0) { G.hitCool = .3; sfx.knock(); G.shake = Math.max(G.shake, .12); for (let q = 0; q < 6; q++) chunk(.05, .05, .05, sparkMat, -sd*(player.userData.halfW || .8) + rand(-.2, .2), rand(.3, .8), rand(-1.6, 1.6), new THREE.Vector3(-sd*rand(1, 4), rand(1, 4), rand(2, 8))); } }   /* leaning on a car sideways only scrapes paint */
+          else if (o.kind === 'car' && !o.bike && (oz < o.halfL + 1.0 || ox > o.halfW + .2)) {   /* flank to flank, or my corner on his corner while overtaking: paint, not metal */ const sd = Math.sign(G.x - o.lat) || 1; G.x += sd*dt*4; if (!o.parked) o.lat -= sd*dt*1.5; if (G.hitCool <= 0) { G.hitCool = .3; sfx.knock(); G.shake = Math.max(G.shake, .12); for (let q = 0; q < 6; q++) chunk(.05, .05, .05, sparkMat, -sd*(player.userData.halfW || .8) + rand(-.2, .2), rand(.3, .8), rand(-1.6, 1.6), new THREE.Vector3(-sd*rand(1, 4), rand(1, 4), rand(2, 8))); } }   /* leaning on a car sideways only scrapes paint */
           else if (o.bike) { o.dead = true; o.t = 0; o.dy = 0; crash(.85); if (om.userData.rider) om.userData.rider.visible = false; const pd = peds.find(p => p.dist < -25 || p.dist > 250); if (pd) { spawnPed(pd, o.dist + 1); pd.lat = o.lat; pd.side = Math.sign(o.lat) || 1; pd.state = 'dodge'; pd.target = pd.side*rand(9, 10.5); pd.hop = 1; pd.dir = 1; } }   /* the bike flies, the rider gets up and runs for the pavement */
           else { o.dead = true; o.t = 0; o.dy = 0; crash(); }
         }
