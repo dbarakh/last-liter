@@ -76,6 +76,7 @@
   .eyebrow{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);margin:0 0 10px;}
   h1{font-family:var(--display);font-weight:400;font-size:clamp(26px,6vw,44px);line-height:1.05;margin:0 0 14px;text-wrap:balance;}
   .card p{margin:0 0 12px;line-height:1.5;color:var(--ink-dim);max-width:52ch;}
+  .thumbs{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:0 0 18px;} .thumbs figure{margin:0;} .thumbs img{display:block;width:100%;aspect-ratio:10/7;object-fit:cover;background:rgba(0,0,0,.28);border:1px solid var(--line);border-radius:6px;} .thumbs figcaption{font-size:11px;line-height:1.3;color:var(--ink-dim);margin-top:4px;}
   .brief{margin:0 0 18px;padding:0 0 0 18px;font-size:13px;line-height:1.45;color:var(--ink-dim);max-width:60ch;} .brief li{margin:0 0 6px;} .brief b{color:var(--ink);font-weight:500;}
   .rules{display:grid;grid-template-columns:auto 1fr;gap:8px 14px;margin:16px 0 22px;font-size:14px;align-items:center;}
   .rules kbd{font:500 12px/1 var(--body);background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-bottom-width:3px;border-radius:6px;padding:6px 9px;white-space:nowrap;}
@@ -133,10 +134,15 @@
         <li><b>Заправки.</b> Бензин есть не на всех, смотри на табло. Очередь длинная, поэтому влезай: коснись любой машины в очереди, её водитель выйдет драться. Победил, место твоё. Проиграл, тебя выкинут на дорогу.</li>
         <li><b>Расход.</b> Больше всего топлива уходит на разгон. Старайся не терять скорость и не врезаться.</li>
         <li><b>Удары.</b> Машина, коляска, остановка: полная остановка и урон кузову. Самокатчик или велосипедист: урон, но скорость почти не теряешь, а за сбитый самокат капает немного бензина. Столбы, деревья, урны, лавочки, столбики и ограждения: только искры.</li>
-        <li><b>Трейлер с аппарелью</b> это трамплин: разгонись и прыгай, за ним всегда чисто.</li>
-        <li><b>Драка:</b> серии ударов, пока противник не поставит блок. Чем дальше заехал, тем злее водители.</li>
-        <li><b>Телега</b> едет без бензина, лошадь подстёгивается стрелкой вверх.</li>
       </ul>
+      <div class="thumbs">
+        <figure><img id="thumbStation" alt=""><figcaption>Заправка: очередь, за место дерутся</figcaption></figure>
+        <figure><img id="thumbPram" alt=""><figcaption>Коляска: стена, стоп и урон</figcaption></figure>
+        <figure><img id="thumbScooter" alt=""><figcaption>Самокатчики: урон, но капля бензина</figcaption></figure>
+        <figure><img id="thumbStop" alt=""><figcaption>Остановка: стоп и урон</figcaption></figure>
+        <figure><img id="thumbBike" alt=""><figcaption>Велосипедист: урон</figcaption></figure>
+        <figure><img id="thumbBollard" alt=""><figcaption>Столбики, лавочки: только искры</figcaption></figure>
+      </div>
       <p class="eyebrow" style="margin:0 0 8px">На чём едем</p>
       <div class="routes cars"><button class="route on" type="button" data-car="lada">Шестёрка</button><button class="route" type="button" data-car="cart">Телега с лошадью</button></div>
       <button class="go" id="startBtn" type="button">Завести мотор</button>
@@ -146,7 +152,7 @@
       <p class="eyebrow">Пауза</p>
       <h1>Меню</h1>
       <p style="margin:0 0 14px;color:var(--ink-dim)">Игра стоит. <kbd>Esc</kbd> закрывает меню.</p>
-      <div class="routes"><button class="route" type="button" id="menuSound">Звук</button><button class="route" type="button" id="menuView">Вид</button><button class="route" type="button" id="menuGfx">Графика: обычная</button></div>
+      <div class="routes"><button class="route" type="button" id="menuSound">Звук</button><button class="route" type="button" id="menuView">Вид</button><button class="route" type="button" id="menuGfx" style="display:none">Графика: обычная</button></div>
       <button class="go" id="resumeBtn" type="button">Продолжить</button>
       <button class="go" id="restartBtn" type="button" style="margin-top:10px;background:var(--panel);color:var(--ink);box-shadow:0 6px 0 rgba(0,0,0,.35);border:1px solid var(--line)">Заново: выбрать машину и маршрут</button>
     </div>
@@ -1928,7 +1934,7 @@
   let startBiome = 'city'; document.querySelectorAll('.route[data-bio]').forEach(b => b.addEventListener('click', () => { startBiome = b.dataset.bio; document.querySelectorAll('.route[data-bio]').forEach(x => x.classList.toggle('on', x === b)); b.blur(); }));
   document.querySelectorAll('.route[data-car]').forEach(b => b.addEventListener('click', () => { startCar = b.dataset.car; document.querySelectorAll('.route[data-car]').forEach(x => x.classList.toggle('on', x === b)); b.blur(); }));
   $('startBtn').addEventListener('click', start); $('againBtn').addEventListener('click', start);
-  let quality = 'high'; try { quality = localStorage.getItem('ll-quality') || 'high'; } catch(e){}
+  let quality = 'low';   /* light graphics only: no shadows, no high-dpi rendering */
   function applyQuality(){ const low = quality === 'low', dpr = window.devicePixelRatio || 1; renderer.setPixelRatio(low ? Math.min(dpr, 1) : Math.min(dpr, 2)); renderer.shadowMap.enabled = !low; if (dir.shadow.map) { dir.shadow.map.dispose(); dir.shadow.map = null; } dir.shadow.mapSize.set(low ? 1024 : 2048, low ? 1024 : 2048); scene.traverse(o => { if (o.material) { const ms = Array.isArray(o.material) ? o.material : [o.material]; for (const mt of ms) mt.needsUpdate = true; } }); fscene.traverse(o => { if (o.material) { const ms = Array.isArray(o.material) ? o.material : [o.material]; for (const mt of ms) mt.needsUpdate = true; } }); $('menuGfx').textContent = low ? 'Графика: лёгкая' : 'Графика: обычная'; }   /* light: no shadows, no high-dpi rendering; enough for an old laptop or a phone */
   function setQuality(q){ quality = q; try { localStorage.setItem('ll-quality', q); } catch(e){} applyQuality(); }
   $('menuGfx').addEventListener('click', () => { setQuality(quality === 'low' ? 'high' : 'low'); $('menuGfx').blur(); });
@@ -2308,6 +2314,24 @@
     hudT += dt; if (hudT > .1) { hudT = 0; if (m !== 'menu') updateHud(); }
     renderer.render(scene, camera);
   }
+  // start screen pictures: the real models, rendered once into small images
+  function renderThumbs(){
+    const items = [
+      ['thumbStation', () => { const g = new THREE.Group(); g.add(buildStation({name:'АЗС', type:'queue', n:3, fuel:4}, 1, 3)); for (const z of [9, 18.6]) { const c = makeCar(pick(trafficColors), false); c.position.set(PIT_X, 0, z); g.add(c); } return g; }, [-1, 5.5, 22], [10, 1.2, 2]],
+      ['thumbPram', () => makePram(), [2.4, 1.5, 2.4], [0, .7, -.6]],
+      ['thumbScooter', () => makeScooter(true), [2.3, 1.4, 2.4], [0, .8, .1]],
+      ['thumbStop', () => makeStop(), [6.5, 3, 6], [0, 1.2, 0]],
+      ['thumbBike', () => { const b = makeBike(); if (b.userData.thighs) for (let q = 0; q < 2; q++) { b.userData.thighs[q].rotation.x = 1.15 - (q ? -.4 : .4); b.userData.shins[q].rotation.x = -.95 + (q ? .3 : -.3); } return b; }, [2.4, 1.3, 2.2], [0, .7, 0]],
+      ['thumbBollard', () => { const g = new THREE.Group(); g.add(makeBollard()); const bn = makeBenchS(); bn.position.set(1.6, 0, 0); g.add(bn); return g; }, [2.8, 1.5, 3.2], [.8, .45, 0]],
+    ];
+    let R; try { R = new THREE.WebGLRenderer({antialias:true, alpha:true}); } catch(e) { return; }
+    R.setSize(200, 140); R.setPixelRatio(2); R.outputEncoding = THREE.sRGBEncoding;
+    const sc = new THREE.Scene(); sc.add(new THREE.HemisphereLight(col(0xbfa8ff), col(0x8a7a6a), 1.0)); const dl = new THREE.DirectionalLight(col(0xffc27a), 1.3); dl.position.set(4, 7, 6); sc.add(dl);
+    const cam = new THREE.PerspectiveCamera(40, 200/140, .1, 200);
+    for (const [id, build, pos, look] of items) { const el = $(id); if (!el) continue; let m; try { m = build(); } catch(e) { continue; } sc.add(m); cam.position.set(pos[0], pos[1], pos[2]); cam.lookAt(look[0], look[1], look[2]); R.render(sc, cam); el.src = R.domElement.toDataURL('image/png'); sc.remove(m); }
+    R.dispose();
+  }
+  setTimeout(renderThumbs, 50);
   applyQuality(); updateTrack(0); updateRibbons(); resize(); setPad('drive'); requestAnimationFrame(frame);
 })();
 </script>
