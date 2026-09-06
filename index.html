@@ -125,21 +125,10 @@
 
   <div id="overlay">
     <div class="card" id="startCard">
-      <p class="eyebrow">Прототип · ВАЗ-2106 · бак почти пуст</p>
+      <p class="eyebrow">Бак почти пуст</p>
       <h1>Последний литр</h1>
-      <p>Цель одна: уехать как можно дальше. В баке топлива на три минуты холостого хода. Расход зависит от того, как едешь: больше всего топлива уходит на старт с места под газом, на крейсерской скорости меньше, на накате без газа совсем немного, на холостых минимум. Шкала мгновенного расхода под топливом. В городе есть заправки, но одни закрыты, у других очередь на полквартала, и никто не знает, есть ли там бензин вообще. Полный бак даёт сто секунд холостого хода, на скорости меньше. Мотор жрёт топливо всегда: на ходу, в очереди и пока ты дерёшься.</p>
-      <div class="rules">
-        <kbd>↑ ↓</kbd><span><b>Газ и тормоз.</b> До 100 км/ч, разгон около десяти секунд. Стоя на месте, тормозом можно сдать чуть назад.</span>
-        <kbd>V</kbd><span><b>Вид.</b> Переключает камеру: сзади или из кабины.</span>
-        <kbd>← →</kbd><span><b>Руль.</b> Поворачивает нос машины, пока она катится; стоя на месте, она не разворачивается. Едет туда, куда смотрит. Дорога петляет и идёт горками. Развилки объявляют билборды: левая половина дороги ведёт к одной заправке, правая к другой. Есть ли на заправке бензин, написано на её табло. На перекрёстках смотри на светофор: поперечный поток не тормозит. Повернуть на перекрёстке просто: перед стрелками на асфальте встань в левую полосу, и машина сама повернёт налево, в правую направо, в средней поедешь прямо.</span>
-        <kbd>зазор</kbd><span><b>Заправка.</b> Это съезд с дороги, как пит-лейн: из крайней полосы ещё раз в сторону. Когда очередь трогается, между машинами открывается <b>зелёный зазор</b>. Въезжай в него, и водитель сзади выйдет разбираться. За последней машиной встаёшь без драки.</span>
-        <kbd>J K L</kbd><span><b>Драка:</b> удар, пинок, блок, <kbd>Space</kbd> прыжок, удар в прыжке бьёт сильнее. Победил, место твоё. Проиграл, тебя выкидывают из очереди.</span>
-        <kbd>💥</kbd><span><b>Аварии.</b> Каждый удар отрывает от шестёрки слой: бампер, капот с мотором наружу, двери, крыша. Первый удар снимает бампер, капот и холодильник с багажника, второй передние двери, зеркала, задние фонари и багажник с крыши, третий крышу, задние двери и крышку багажника, которая после второго удара уже открыта и хлопает, четвёртый весь каркас и крышку мотора, остаются днище, сиденья, мотор и колёса в густом дыму. Пятый удар, и колёса отлетают, а водитель вылетает из машины. Открытые люки тоже считаются, перед ними стоят конусы, закрытые безвредны. Ямы в асфальте только трясут, а на участках со снятым асфальтом машину колотит от кромки до кромки.</span>
-      </div>
       <p class="eyebrow" style="margin:0 0 8px">На чём едем</p>
-      <div class="routes cars"><button class="route on" type="button" data-car="lada">Шестёрка</button><button class="route" type="button" data-car="bigfoot">Бигфут</button><button class="route" type="button" data-car="cabrio">Кабриолет</button><button class="route" type="button" data-car="gelik">Гелик</button><button class="route" type="button" data-car="buhanka">Буханка</button><button class="route" type="button" data-car="cart">Телега</button></div>
-      <p class="eyebrow" style="margin:0 0 8px">Куда едем</p>
-      <div class="routes"><button class="route on" type="button" data-bio="city">Город</button><button class="route" type="button" data-bio="village">Деревня</button><button class="route" type="button" data-bio="forest">Лес</button></div>
+      <div class="routes cars"><button class="route on" type="button" data-car="lada">Шестёрка</button><button class="route" type="button" data-car="cart">Телега с лошадью</button></div>
       <button class="go" id="startBtn" type="button">Завести мотор</button>
       <p style="margin:14px 0 0;font-size:11px;letter-spacing:.06em;color:var(--ink-dim)">Звуки: визг шин Tom Haigh (audible-edge), OpenGameArt.org, CC-BY 3.0 · шум дороги orlandorizo, Freesound, CC0 · мотор Iridiuss, Freesound, CC0 · шум города IgnasD, OpenGameArt, CC0</p>
     </div>
@@ -780,7 +769,7 @@
     g.beginPath(); g.moveTo(32, 70); g.lineTo(30, 44); g.lineTo(36, 22); g.lineTo(48, 30); g.stroke(); g.beginPath(); g.arc(34, 12, 7, 0, 6.29); g.fill();
     const t = new THREE.CanvasTexture(cv); t.encoding = THREE.sRGBEncoding; return new THREE.MeshBasicMaterial({map:t, transparent:true, depthWrite:false}); })();   /* a white cyclist on the red path, every forty metres */
   const bikeMarks = [];
-  for (let i = 0; i < 8; i++) for (const side of [-1, 1]) { const m = new THREE.Mesh(new THREE.PlaneGeometry(1.0, 1.5), bikeSign); m.rotation.x = -Math.PI/2; m.userData.y0 = .042; world.add(m); bikeMarks.push({m, side, dist:-10 + i*40 + (side > 0 ? 20 : 0)}); }
+  for (let i = 0; i < 8; i++) for (const side of [-1, 1]) { const m = new THREE.Mesh(new THREE.PlaneGeometry(1.0, 1.5), bikeSign); m.rotation.x = -Math.PI/2; m.userData.y0 = .08;   /* well clear of the path surface: six millimetres above it the sign fought the depth buffer and flickered like a ghost */ world.add(m); bikeMarks.push({m, side, dist:-10 + i*40 + (side > 0 ? 20 : 0)}); }
   const wireMat = std(0x2a2a2e, {roughness:.6, metalness:.6, side:THREE.DoubleSide});
   makeRibbon(3.62, 3.68, 5.6, wireMat); makeRibbon(4.32, 4.38, 5.6, wireMat);
 
@@ -1444,7 +1433,8 @@
   function clearObstacles(all){ for (let i = obstacles.length - 1; i >= 0; i--) { const o = obstacles[i]; if (all || o.dist > -30) { world.remove(o.mesh); obstacles.splice(i, 1); } } }
   function removeStation(){ if (G.st) { for (const f of G.st.group.userData.fillers || []) if (f.e) { world.remove(f.e.m); const k = decor.indexOf(f.e); if (k >= 0) decor.splice(k, 1); } world.remove(G.st.group); G.st = null; $('board').style.display = 'none'; } }
   function removeFork(){ if (G.fork) { world.remove(G.fork.group); G.fork = null; } }
-  const PROMPT_DRIVE = '<kbd>↑</kbd> газ · <kbd>↓</kbd> тормоз · <kbd>←</kbd><kbd>→</kbd> руль';
+  const PROMPT_DRIVE = '<kbd>↑</kbd> газ · <kbd>↓</kbd> тормоз · <kbd>←</kbd><kbd>→</kbd> руль · <kbd>V</kbd> вид · <kbd>Esc</kbd> меню', PROMPT_CART = '<kbd>Space</kbd> подстегнуть лошадь · <kbd>↓</kbd> тормоз · <kbd>←</kbd><kbd>→</kbd> руль · <kbd>V</kbd> вид · <kbd>Esc</kbd> меню';
+  function drivePrompt(){ return CAR.cart ? PROMPT_CART : PROMPT_DRIVE; }
 
   function start(){
     audioInit(); clearObstacles(true); removeStation(); removeFork(); clearWreck(); clearCrossings(); TRACK.zones.length = 0; TRACK.turns.length = 0; G.turnOffer = null; G.turnHold = 0;
@@ -1455,7 +1445,7 @@
     biomeSegs[0].kind = startBiome;   /* the whole run goes where you picked on the start screen */
     addZone(-50, 60);
     $('overlay').hidden = true; $('fightBars').style.display = 'none'; $('board').style.display = 'none';
-    updateRep(); updateDmgHud(); updateHud(); setPad('drive'); prompt(PROMPT_DRIVE);
+    updateRep(); updateDmgHud(); updateHud(); setPad('drive'); prompt(drivePrompt());
     announce('ГАЗУЙ', 'good', 1200, 'в баке на три минуты холостых');
   }
   function gameOver(reason){
@@ -1739,7 +1729,7 @@
     G.st = {s, group:g, q, side, laneX:PIT_X*side, markers, dist:170 + (s.type === 'queue' ? (s.n - 1)*SPACING : 0), serve:SERVE, revealed:true, filling:0, filled:false, wasInLane:false, noFuelTold:false};
     for (const f of g.userData.fillers || []) { g.remove(f.m); world.add(f.m); const e = {m:f.m, side:f.side, row:0, d:f.z1 - f.z0, dist:G.st.dist - (f.z0 + f.z1)/2, lat:side*20.6, yaw:0, kind:'filler'}; f.e = e; decor.push(e); }
     $('board').style.display = 'block'; updateBoard();
-    prompt(PROMPT_DRIVE);   /* no coaching at the station: the board says what there is, the rest you work out */
+    prompt(drivePrompt());   /* no coaching at the station: the board says what there is, the rest you work out */
   }
 
   // ---- queue helpers ----
@@ -1765,7 +1755,7 @@
     for (const k of c.group.children) { if (!(k.userData.win || k.type === 'Group')) continue; const x = k.position.x, z = k.position.z; if (Math.abs(x) > 52 && Math.sign(x) === -sign) k.visible = false; if (Math.sign(x) === sign && z > 0 && Math.abs(x) < 62) k.visible = false; }
     c.lamps.forEach(l => { l.r.material = lampOff; l.gr.material = lampOff; });
     G.turnOffer = null; G.turnHold = 0; G.head *= .3; G.slideTo = G.x*.6;
-    announce(sign < 0 ? 'НАЛЕВО' : 'НАПРАВО', 'good', 900, 'новая улица'); prompt(PROMPT_DRIVE);
+    announce(sign < 0 ? 'НАЛЕВО' : 'НАПРАВО', 'good', 900, 'новая улица'); prompt(drivePrompt());
   }
   function whip(){ G.urge = Math.min(1.35, (G.urge || 0) + .42); G.whipT = .35; sfx.whip(); }
   function cutIn(){
@@ -1793,6 +1783,7 @@
   // ---- fight flow ----
   function startFight(entry){
     let d = entry.d; if (G.rep >= 4 && Math.random() < .6) d = BOSS;
+    const lvl = Math.min(4, Math.max(0, G.dist)/1500); d = Object.assign({}, d, {block:Math.min(.75, d.block + .08*lvl), aggr:Math.min(.9, d.aggr + .06*lvl), speed:d.speed*(1 + .05*lvl), dmg:d.dmg*(1 + .1*lvl), hp:Math.round(d.hp*(1 + .15*lvl))});   /* every kilometre and a half the drivers get tougher, quicker and better at blocking */
     F.phase = 'intro'; F.d = d; F.entry = entry; G.mode = 'fight'; G.speed = 0;
     sfx.doorSlam();
     fadeTo(() => {
@@ -1916,7 +1907,7 @@
     const head = cars[0];
     const playerAtPump = inLane && Math.abs(G.speed) < .4 && Math.abs(pz) < 2.6 && (!head || head.z > pz);
     if (canFill && playerAtPump && !st.filled) {
-      if (s.fuel > 0) { st.filling += dt; if (st.filling >= 3) { st.filled = true; st.filling = 0; addFuel(FILL_SECONDS); G.fills++; s.fuel--; sfx.fuel(); G.empty = false; flash('.35', '#7ad37a'); announce('ПОЛНЫЙ БАК', 'good', 1500, '+' + FILL_SECONDS + ' единиц топлива, поезжай'); prompt(PROMPT_DRIVE); } }
+      if (s.fuel > 0) { st.filling += dt; if (st.filling >= 3) { st.filled = true; st.filling = 0; addFuel(FILL_SECONDS); G.fills++; s.fuel--; sfx.fuel(); G.empty = false; flash('.35', '#7ad37a'); announce('ПОЛНЫЙ БАК', 'good', 1500, '+' + FILL_SECONDS + ' единиц топлива, поезжай'); prompt(drivePrompt()); } }
       else if (!st.noFuelTold) { st.noFuelTold = true; sfx.empty(); announce('КОЛОНКА ПУСТАЯ', 'bad', 1400, 'здесь ничего не нальют'); }
     } else st.filling = 0;
     if (canFill && head && head.z < 1.5 && !(inLane && pz < head.z)) {
@@ -1954,7 +1945,7 @@
     G.cutTarget = null;
     if (canFill && !inLane && Math.abs(G.x) > 2.2 && Math.sign(G.x) === side && Math.abs(G.x - laneX) < 5.5 && Math.abs(G.speed) < 7 && F.phase === 'none') {
       let best = null; for (let i = 0; i < cars.length; i++) { const e = cars[i], lead = cars[i - 1]; if (e.z <= pz - 4.5 || e.z - pz > 14 || e.challenged) continue; if (lead && lead.z + lead.halfL + PLAYER_HALF + .3 >= pz) continue; best = e; break; }
-      if (best && mi < st.markers.length) { G.cutTarget = best; const m = st.markers[mi++]; m.visible = true; m.position.z = best.z - best.halfL - 3.0; m.material.opacity = .55 + Math.sin(G.time*8)*.25; if (!st.promptCut) { st.promptCut = true; prompt('<kbd>Space</kbd> влезть перед машиной с зелёной меткой · за последней машиной встаёшь без драки'); } }
+      if (best && mi < st.markers.length) { G.cutTarget = best; const m = st.markers[mi++]; m.visible = true; m.position.z = best.z - best.halfL - 3.0; m.material.opacity = .55 + Math.sin(G.time*8)*.25;  }
     }
     for (; mi < st.markers.length; mi++) st.markers[mi].visible = false;
     // ---- queue cars are solid: nose into a bumper and you stop, slide into a flank and you get shoved out ----
@@ -1963,6 +1954,8 @@
       if (e.gone && e.z < -20) continue;
       const dx = G.x - e.x, dz = pz - e.z, hw = .98 + player.userData.halfW, hl = e.halfL + PLAYER_HALF;
       if (Math.abs(dx) >= hw || Math.abs(dz) >= hl) continue;
+      // any touch of a car in the queue, anywhere, at any speed: its driver gets out. Behind you: you take his place; ahead of you: you stop in the lane
+      if (canFill && !e.gone && !e.arriving && !e.detour && !e.challenged && F.phase === 'none' && G.mode === 'drive') { if (e.z > pz) { G.cutTarget = e; cutIn(); } else { G.slideTo = laneX; G.speed = Math.min(Math.abs(G.speed), 1.5); } cars.forEach(q => { if (q.z >= e.z) q.challenged = true; }); G.rep = Math.min(5, G.rep + 1); updateRep(); startFight(e); return; }
       const overX = hw - Math.abs(dx), overZ = hl - Math.abs(dz);
       if (overZ < overX) {
         if (dz > 0 && G.speed > 0) { if (G.speed > 9 && G.bumpCool <= 0) crash(.3); G.speed = -1.2; G.bumpCool = .7; G.shake = Math.max(G.shake, .35); sfx.horn(); }
@@ -2040,7 +2033,7 @@
         }
         for (const rb of roundabouts) {
           if (!rb.announced && rb.s0 - G.dist < 70) { rb.announced = true; announce('КРУГ', '', 1600, 'держи → перед нужным съездом'); prompt('кольцо: держи <kbd>→</kbd> перед съездом, чтобы съехать · иначе едешь дальше по кругу'); }
-          if (rb.exit) { if (!rb.done && G.dist > rbEndS(rb) + 4) { rb.done = true; prompt(PROMPT_DRIVE); } continue; }
+          if (rb.exit) { if (!rb.done && G.dist > rbEndS(rb) + 4) { rb.done = true; prompt(drivePrompt()); } continue; }
           if (G.dist < rb.s0 + RB.Le) continue;
           let i = 1; while (rbLeaveS(rb, i) < G.dist + 3) i++;
           if ((rbLeaveS(rb, i) - G.dist < 15 && held.right) || i > 7) { rb.exit = i; announce('СЪЕЗД', 'good', 900, ['направо', 'прямо', 'налево', 'обратно'][(i - 1) % 4]); }
@@ -2121,7 +2114,7 @@
       // ---- fork ----
       if (G.fork) { const f = G.fork; f.dist -= dz; place(f.group, f.dist, 0, 0); if (!f.decided && f.dist < -58) decideFork(); if (f.dist < -80) removeFork(); }
       // ---- station ----
-      if (G.st) { const st = G.st; st.dist -= dz; place(st.group, st.dist, 0, 0); if (m === 'drive') updateStation(dt); if (G.st && G.st.dist < -60) { removeStation(); G.eventTimer = 5; prompt(PROMPT_DRIVE); } }
+      if (G.st) { const st = G.st; st.dist -= dz; place(st.group, st.dist, 0, 0); if (m === 'drive') updateStation(dt); if (G.st && G.st.dist < -60) { removeStation(); G.eventTimer = 5; prompt(drivePrompt()); } }
       // ---- scenery ----
       for (const e of pathUsers) { if (e.gone > 0) { e.gone -= dt; if (e.gone <= 0) { e.m = e.kind === 'bike' ? makeBike() : makePram(); world.add(e.m); e.dist = 300 + Math.random()*40; e.dir = 1; } continue; } e.dist -= dz; e.t += dt; e.dist += e.dir*e.speed*dt; if (e.kind === 'bike') { if (e.home === undefined) e.home = e.lat; const slow = rideSteer(e, 6.9, 8.1, dt); e.dist += e.dir*(slow ? -e.speed*.5 : 0)*dt; if ((G.mode === 'drive' && Math.abs(G.speed) > 1.5 && Math.abs(e.dist) < 2.8 && Math.abs(e.lat - G.x) < 1.5) || (Math.abs(e.dist) < 200 && rideContact(e))) { if (e.m.userData.rider) e.m.userData.rider.visible = false; runnersAt(e.dist, e.lat, 1); flingRide(e); e.gone = 8; continue; } } if (e.kind === 'pram') { if (e.hitT > 0) { e.hitT -= dt; e.dist -= e.dir*e.speed*dt; } else if (G.mode === 'drive' && Math.abs(G.speed) > .8 && Math.abs(e.dist) < 2.4 && Math.abs(e.lat - G.x) < 1.5) { e.hitT = 3; e.kv = 22*Math.sign(G.speed); crash(); G.speed = 0; sfx.horn(); } if (e.kv) { e.dist += e.kv*dt; e.kv *= Math.pow(.02, dt); if (Math.abs(e.kv) < .3) e.kv = 0; } }   /* a pram is a concrete wall: a stage of damage and a dead stop; she is shoved a few metres on and stands there, so you can steer past without reversing */ if (e.dist < -40) { e.dist = 300 + Math.random()*40; e.dir = 1; } else if (e.dist > 340) { e.dist = -30; e.dir = -1; } const vis = biomeAt(e.dist + G.dist) === 'city' && !crossings.some(c => Math.abs(e.dist - c.dist) < c.half + 4) && !(G.st && e.side === G.st.side && e.dist > G.st.dist - G.st.group.userData.tail - 6 && e.dist < G.st.dist - G.st.group.userData.front + 6); e.m.visible = vis; if (vis) { if (e.kind === 'bike' || e.kind === 'pram') e.m.userData.y0 = e.kind === 'bike' ? .07 : .04; place(e.m, e.dist, e.lat, e.dir > 0 ? 0 : Math.PI);   /* the path is 3.6 cm proud of the road: wheels roll on it, not in it */ const L = e.m.userData.limbs; if (e.kind === 'bike' && e.m.userData.thighs) { const ph = e.t*e.speed*2.6; for (let q = 0; q < 2; q++) { const a = ph + q*Math.PI; e.m.userData.thighs[q].rotation.x = 1.15 - Math.sin(a)*.42; e.m.userData.shins[q].rotation.x = -.95 + Math.sin(a)*.5 - Math.cos(a)*.15; } } else if (L) { const sw = Math.sin(e.t*6)*.45; L[0].rotation.x = sw; L[2].rotation.x = -sw; L[1].rotation.x = -.5; L[3].rotation.x = -.5; } } }
       for (const e of scooters) { e.dist -= dz; e.t += dt; e.dist += e.dir*e.speed*dt; if (e.dist < -40) { e.dist = 300 + Math.random()*40; e.dir = 1; e.speed = rand(3.5, 6); } else if (e.dist > 340) { e.dist = -30; e.dir = -1; } const vis = biomeAt(e.dist + G.dist) === 'city' && !crossings.some(c => Math.abs(e.dist - c.dist) < c.half + 4) && !(G.st && e.side === G.st.side && e.dist > G.st.dist - G.st.group.userData.tail - 6 && e.dist < G.st.dist - G.st.group.userData.front + 6); if (e.gone > 0) { e.gone -= dt; if (e.gone <= 0) { e.m = makeScooter(Math.random() < .4); world.add(e.m); e.dist = 300 + Math.random()*40; e.dir = 1; } continue; } if (e.home === undefined) e.home = e.lat; const slow = rideSteer(e, 8.7, 11.6, dt); e.dist += e.dir*(slow ? -e.speed*.6 : 0)*dt; if ((G.mode === 'drive' && Math.abs(G.speed) > 1.5 && Math.abs(e.dist) < 2.8 && Math.abs(e.lat - G.x) < 1.5) || (Math.abs(e.dist) < 200 && rideContact(e))) { runnersAt(e.dist, e.lat, e.m.children.length > 7 ? 2 : 1); flingRide(e); e.gone = 8; continue; } e.m.visible = vis; if (vis) { if (e.kind === 'bike' || e.kind === 'pram') e.m.userData.y0 = e.kind === 'bike' ? .07 : .04; place(e.m, e.dist, e.lat, e.dir > 0 ? 0 : Math.PI);   /* the path is 3.6 cm proud of the road: wheels roll on it, not in it */ e.m.rotation.z += Math.sin(e.t*3)*.03; } }
