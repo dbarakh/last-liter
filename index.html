@@ -136,7 +136,7 @@
       <p class="eyebrow">Пауза</p>
       <h1>Меню</h1>
       <p style="margin:0 0 14px;color:var(--ink-dim)">Игра стоит. <kbd>Esc</kbd> закрывает меню.</p>
-      <div class="routes"><button class="route" type="button" id="menuSound">Звук</button><button class="route" type="button" id="menuView">Вид</button></div>
+      <div class="routes"><button class="route" type="button" id="menuSound">Звук</button><button class="route" type="button" id="menuView">Вид</button><button class="route" type="button" id="menuGfx">Графика: обычная</button></div>
       <button class="go" id="resumeBtn" type="button">Продолжить</button>
       <button class="go" id="restartBtn" type="button" style="margin-top:10px;background:var(--panel);color:var(--ink);box-shadow:0 6px 0 rgba(0,0,0,.35);border:1px solid var(--line)">Заново: выбрать машину и маршрут</button>
     </div>
@@ -718,7 +718,7 @@
     for (let i = 0; i < n; i++) { const S = g0 + T.dMin + i*T.ds, b = biomeBlend(S); T.bw[i] = b.w/6.6; T.bp[i] = b.p; T.bc[i*3] = b.r; T.bc[i*3 + 1] = b.g; T.bc[i*3 + 2] = b.b; T.fs[i] = rfs.some(f => S > f.s + 1 && S < f.s + 230) ? 1 : 0; }
     for (const r of ribbons) {
       const pos = r.m.geometry.attributes.position.array, width = Math.abs(r.l1 - r.l0);
-      const ground = r.l0 <= -300, wire = r.yOff > 1, road = !ground && !wire && r.yOff === 0, pave = r.sideTag !== 0 && width > 1, kerb = r.yOff === .12, edge = r.sideTag !== 0 && width < .5;
+      const ground = !!r.ground, wire = r.yOff > 1, road = !ground && !wire && r.yOff === 0, pave = r.sideTag !== 0 && width > 1, kerb = r.yOff === .12, edge = r.sideTag !== 0 && width < .5;
       const cut = st && r.sideTag === st.side, U = cut ? st.group.userData : null;
       const cLo = cut ? (pave ? st.dist - U.tail + 26 : st.dist - U.tail - 6) : 0, cHi = cut ? (pave ? st.dist - U.front - 24 : st.dist - U.front + 6) : 0;
       const colArr = ground ? r.m.geometry.attributes.color.array : null;
@@ -732,6 +732,7 @@
         if ((pave || kerb) && T.bp[i] < 1) y -= (1 - T.bp[i])*(r.yOff + .6);
         if (wire && (T.bp[i] < .5 || inRb || T.fs[i])) l1 = l0;
         if (T.fs[i] && (road || edge || kerb || pave)) l1 = l0;   /* past an undecided fork the ribbon simply stops: the static Y is the road there */
+        if ((edge || kerb || pave) && typeof crossings !== 'undefined' && crossings.some(c => Math.abs(d - c.dist) < c.half + 13.4)) l1 = l0;   /* inside a junction the street's own kerbs and pavements stop: the junction brings its own, nothing lies on top of anything */
         if (inRb) { if (ground) { l0 = -12.5; l1 = 12.5; } else if (!wire && r.yOff > 0) y -= r.yOff + .6; }
         pos[k] = T.sx[i] + l0*c; pos[k + 1] = y; pos[k + 2] = T.sz[i] + l0*sn; pos[k + 3] = T.sx[i] + l1*c; pos[k + 4] = y; pos[k + 5] = T.sz[i] + l1*sn;
         if (colArr) { colArr[k] = colArr[k + 3] = T.bc[i*3]; colArr[k + 1] = colArr[k + 4] = T.bc[i*3 + 1]; colArr[k + 2] = colArr[k + 5] = T.bc[i*3 + 2]; }
@@ -742,26 +743,26 @@
   }
   const edgeMat = std(0xf3ead6, {roughness:.6, side:THREE.DoubleSide}), swMat = std(0x9a968f, {roughness:1, side:THREE.DoubleSide});
   const groundMat = std(0xffffff, {roughness:1, side:THREE.DoubleSide, vertexColors:true}), plateMat = std(0x6f6b6a, {roughness:1, side:THREE.DoubleSide});
-  makeRibbon(-700, 700, -.06, groundMat, true);
-  { const gr = ribbons[ribbons.length - 1]; gr.m.geometry.setAttribute('color', new THREE.BufferAttribute(new Float32Array(TRACK.n*6), 3)); }
+  // the ground is two wings either side of the street and a bed 30 cm under it: nothing shares a plane with the asphalt, so nothing fights it in the depth buffer
+  for (const [a, b, y] of [[-700, -12.3, -.06], [12.3, 700, -.06], [-12.6, 12.6, -.3]]) { makeRibbon(a, b, y, groundMat, true); const gr = ribbons[ribbons.length - 1]; gr.ground = true; gr.m.geometry.setAttribute('color', new THREE.BufferAttribute(new Float32Array(TRACK.n*6), 3)); }
   const skyDisc = new THREE.Mesh(new THREE.CircleGeometry(900, 48), new THREE.MeshBasicMaterial({color:col(HORIZON), fog:false})); skyDisc.rotation.x = -Math.PI/2; skyDisc.position.y = -60; scene.add(skyDisc);
   const groundDisc = new THREE.Mesh(new THREE.CircleGeometry(900, 48), std(0x6f6b6a, {roughness:1})); groundDisc.rotation.x = -Math.PI/2; groundDisc.position.y = -3; scene.add(groundDisc);   /* a floor far below everything, so nothing ever shows the sphere's inside */
   const roadMat = std(0x26242c, {roughness:.95, side:THREE.DoubleSide, polygonOffset:true, polygonOffsetFactor:-1, polygonOffsetUnits:-2});   /* the asphalt always wins the depth fight against the ground under it */
   makeRibbon(-6.6, 6.6, 0, roadMat, true);
-  makeRibbon(-6.29, -6.11, .03, edgeMat, false, -1); makeRibbon(6.11, 6.29, .03, edgeMat, false, 1);
+  makeRibbon(-6.29, -6.11, .05, edgeMat, false, -1); makeRibbon(6.11, 6.29, .05, edgeMat, false, 1);
   makeRibbon(-12.4, -6.5, .03, swMat, true, -1); makeRibbon(6.5, 12.4, .03, swMat, true, 1);
-  const bikeLaneMat = std(0x7a3a3a, {roughness:1, side:THREE.DoubleSide}); makeRibbon(-8.3, -6.7, .036, bikeLaneMat, true, -1); makeRibbon(6.7, 8.3, .036, bikeLaneMat, true, 1);   /* a red bike path on the kerb side of the pavement */
+  const bikeLaneMat = std(0x7a3a3a, {roughness:1, side:THREE.DoubleSide}); makeRibbon(-8.3, -6.7, .09, bikeLaneMat, true, -1); makeRibbon(6.7, 8.3, .09, bikeLaneMat, true, 1);   /* a red bike path on the kerb side of the pavement */
   const kerbMat = std(0xb9b4a8, {roughness:.9, side:THREE.DoubleSide});
   makeRibbon(-6.7, -6.45, .12, kerbMat, false, -1); makeRibbon(6.45, 6.7, .12, kerbMat, false, 1);   // kerb stones, 12 cm proud of the road
 
   const LANES = [-4, 0, 4];
   const world = new THREE.Group(); scene.add(world);
   const dashGeo = new THREE.BoxGeometry(.16, .02, 3), dashes = [];
-  for (let x of [-2, 2]) for (let i = 0; i < 34; i++) { const m = new THREE.Mesh(dashGeo, edgeMat); world.add(m); dashes.push({m, dist:-20 + i*8, lat:x}); }
+  for (let x of [-2, 2]) for (let i = 0; i < 34; i++) { const m = new THREE.Mesh(dashGeo, edgeMat); m.userData.y0 = .04; world.add(m); dashes.push({m, dist:-20 + i*8, lat:x}); }
   // right lane is a bus lane: a painted "A" every 30 m, and two trolley wires above it
   const laneA = (() => { const cv = document.createElement('canvas'); cv.width = 64; cv.height = 96; const g = cv.getContext('2d'); g.fillStyle = '#f3ead6'; g.font = 'bold 88px Arial'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('A', 32, 52); const t = new THREE.CanvasTexture(cv); t.encoding = THREE.sRGBEncoding; return new THREE.MeshBasicMaterial({map:t, transparent:true, depthWrite:false}); })();
   const laneMarks = [];
-  for (let i = 0; i < 11; i++) { const m = new THREE.Mesh(new THREE.PlaneGeometry(1.3, 2.2), laneA); m.rotation.x = -Math.PI/2; m.userData.y0 = .038; world.add(m); laneMarks.push({m, dist:-10 + i*30}); }
+  for (let i = 0; i < 11; i++) { const m = new THREE.Mesh(new THREE.PlaneGeometry(1.3, 2.2), laneA); m.rotation.x = -Math.PI/2; m.userData.y0 = .06; world.add(m); laneMarks.push({m, dist:-10 + i*30}); }
   const bikeSign = (() => { const cv = document.createElement('canvas'); cv.width = 64; cv.height = 96; const g = cv.getContext('2d'); g.strokeStyle = '#f3ead6'; g.fillStyle = '#f3ead6'; g.lineWidth = 5; g.lineCap = 'round'; g.lineJoin = 'round';
     g.beginPath(); g.arc(15, 70, 12, 0, 6.29); g.stroke(); g.beginPath(); g.arc(49, 70, 12, 0, 6.29); g.stroke();
     g.beginPath(); g.moveTo(15, 70); g.lineTo(27, 46); g.lineTo(46, 46); g.lineTo(49, 70); g.lineTo(32, 70); g.lineTo(27, 46); g.stroke();
@@ -769,7 +770,7 @@
     g.beginPath(); g.moveTo(32, 70); g.lineTo(30, 44); g.lineTo(36, 22); g.lineTo(48, 30); g.stroke(); g.beginPath(); g.arc(34, 12, 7, 0, 6.29); g.fill();
     const t = new THREE.CanvasTexture(cv); t.encoding = THREE.sRGBEncoding; return new THREE.MeshBasicMaterial({map:t, transparent:true, depthWrite:false}); })();   /* a white cyclist on the red path, every forty metres */
   const bikeMarks = [];
-  for (let i = 0; i < 8; i++) for (const side of [-1, 1]) { const m = new THREE.Mesh(new THREE.PlaneGeometry(1.0, 1.5), bikeSign); m.rotation.x = -Math.PI/2; m.userData.y0 = .08;   /* well clear of the path surface: six millimetres above it the sign fought the depth buffer and flickered like a ghost */ world.add(m); bikeMarks.push({m, side, dist:-10 + i*40 + (side > 0 ? 20 : 0)}); }
+  for (let i = 0; i < 8; i++) for (const side of [-1, 1]) { const m = new THREE.Mesh(new THREE.PlaneGeometry(1.0, 1.5), bikeSign); m.rotation.x = -Math.PI/2; m.userData.y0 = .14;   /* well clear of the path surface: six millimetres above it the sign fought the depth buffer and flickered like a ghost */ world.add(m); bikeMarks.push({m, side, dist:-10 + i*40 + (side > 0 ? 20 : 0)}); }
   const wireMat = std(0x2a2a2e, {roughness:.6, metalness:.6, side:THREE.DoubleSide});
   makeRibbon(3.62, 3.68, 5.6, wireMat); makeRibbon(4.32, 4.38, 5.6, wireMat);
 
@@ -1104,7 +1105,7 @@
       w.m.visible = o.mesh.visible !== false;
     }
   }
-  function updateMilled(o){ const M = o.mesh.userData.milled, d0 = o.dist - o.halfL, d1 = o.dist + o.halfL, l = o.lat, w = M.w; updateStrip(M.surf, d0, d1, l - w/2, l + w/2, .012); updateStrip(M.lipL, d0, d1, l - w/2 - .07, l - w/2 + .07, .04); updateStrip(M.lipR, d0, d1, l + w/2 - .07, l + w/2 + .07, .04); updateStrip(M.endA, d0, d0 + .16, l - w/2, l + w/2, .04); updateStrip(M.endB, d1 - .16, d1, l - w/2, l + w/2, .04); }
+  function updateMilled(o){ const M = o.mesh.userData.milled, d0 = o.dist - o.halfL, d1 = o.dist + o.halfL, l = o.lat, w = M.w; updateStrip(M.surf, d0, d1, l - w/2, l + w/2, .03); updateStrip(M.lipL, d0, d1, l - w/2 - .07, l - w/2 + .07, .07); updateStrip(M.lipR, d0, d1, l + w/2 - .07, l + w/2 + .07, .07); updateStrip(M.endA, d0, d0 + .16, l - w/2, l + w/2, .07); updateStrip(M.endB, d1 - .16, d1, l - w/2, l + w/2, .07); }
   // potholes: a ragged pit in the asphalt with a crumbled rim and loose gravel
   const pitMat = new THREE.MeshLambertMaterial({color:col(0x0b0a0d), side:THREE.DoubleSide}), rimMat2 = std(0x4a4640, {roughness:1, side:THREE.DoubleSide}), gravelMat = std(0x6a655e, {roughness:1});
   function raggedShape(rx, rz, n, jitter){ const sh = new THREE.Shape(); for (let i = 0; i < n; i++) { const a = i/n*Math.PI*2, r = 1 + rand(-jitter, jitter); const x = Math.cos(a)*rx*r, y = Math.sin(a)*rz*r; i ? sh.lineTo(x, y) : sh.moveTo(x, y); } sh.closePath(); return sh; }
@@ -1556,15 +1557,15 @@
   }
   function spawnCrossing(){
     const g = new THREE.Group(), HALF = 10;
-    const roadX = new THREE.Mesh(new THREE.PlaneGeometry(160, HALF*2), crossAsphalt); roadX.rotation.x = -Math.PI/2; roadX.position.y = .04; roadX.receiveShadow = true; g.add(roadX);
+    const roadX = new THREE.Mesh(new THREE.PlaneGeometry(160, HALF*2), crossAsphalt); roadX.rotation.x = -Math.PI/2; roadX.position.y = .05; roadX.receiveShadow = true; g.add(roadX);
     for (let sd of [-1, 1]) {
-      for (let z of [-HALF + .3, HALF - .3]) { const e = new THREE.Mesh(new THREE.BoxGeometry(72, .02, .18), edgeMat); e.position.set(sd*(8 + 36), .055, z); g.add(e); }
-      for (let k = 0; k < 9; k++) { const d = new THREE.Mesh(new THREE.BoxGeometry(3, .02, .16), edgeMat); d.position.set(sd*(10 + k*8), .055, 0); g.add(d); }
-      for (let k = 0; k < 9; k++) for (let z of [-4.6, 4.6]) { const d = new THREE.Mesh(new THREE.BoxGeometry(2, .02, .12), edgeMat); d.position.set(sd*(10 + k*8), .055, z); g.add(d); }
+      for (let z of [-HALF + .3, HALF - .3]) { const e = new THREE.Mesh(new THREE.BoxGeometry(72, .02, .18), edgeMat); e.position.set(sd*(8 + 36), .15, z); g.add(e); }
+      for (let k = 0; k < 9; k++) { const d = new THREE.Mesh(new THREE.BoxGeometry(3, .02, .16), edgeMat); d.position.set(sd*(10 + k*8), .15, 0); g.add(d); }
+      for (let k = 0; k < 9; k++) for (let z of [-4.6, 4.6]) { const d = new THREE.Mesh(new THREE.BoxGeometry(2, .02, .12), edgeMat); d.position.set(sd*(10 + k*8), .15, z); g.add(d); }
     }
-    for (let sx of [-1, 1]) for (let sz of [-1, 1]) { const up = sz < 0, th = sx > 0 ? (up ? 0 : 1.5*Math.PI) : (up ? .5*Math.PI : Math.PI); const q = new THREE.Mesh(new THREE.CircleGeometry(21, 20, th, Math.PI/2), crossAsphalt); q.rotation.x = -Math.PI/2; q.position.set(sx*6.6, .036, sz*HALF); q.receiveShadow = true; g.add(q); }
-    const stop = new THREE.Mesh(new THREE.BoxGeometry(13, .02, .5), edgeMat); stop.position.set(0, .05, HALF + 4.9); g.add(stop);
-    for (let k = -5; k <= 5; k++) for (let z of [HALF + 2.2, -HALF - 2.2]) { const zb = new THREE.Mesh(new THREE.BoxGeometry(.7, .02, 3.2), edgeMat); zb.position.set(k*1.2, .05, z); g.add(zb); }
+    for (let sx of [-1, 1]) for (let sz of [-1, 1]) { const up = sz < 0, th = sx > 0 ? (up ? 0 : 1.5*Math.PI) : (up ? .5*Math.PI : Math.PI); const q = new THREE.Mesh(new THREE.CircleGeometry(21, 20, th, Math.PI/2), crossAsphalt); q.rotation.x = -Math.PI/2; q.position.set(sx*6.6, .1, sz*HALF); q.receiveShadow = true; g.add(q); }
+    const stop = new THREE.Mesh(new THREE.BoxGeometry(13, .02, .5), edgeMat); stop.position.set(0, .15, HALF + 4.9); g.add(stop);
+    for (let k = -5; k <= 5; k++) for (let z of [HALF + 2.2, -HALF - 2.2]) { const zb = new THREE.Mesh(new THREE.BoxGeometry(.7, .02, 3.2), edgeMat); zb.position.set(k*1.2, .15, z); g.add(zb); }
     const lamps = [];
     for (let sd of [-1, 1]) { const pole = new THREE.Mesh(new THREE.CylinderGeometry(.1, .12, 5, 8), postMat); pole.position.set(sd*7.4, 2.5, HALF + 5.5); g.add(pole); const hd = new THREE.Mesh(new THREE.BoxGeometry(.5, 1.2, .4), std(0x222228)); hd.position.set(sd*7.4, 5.2, HALF + 5.5); g.add(hd); const r = new THREE.Mesh(new THREE.SphereGeometry(.16, 10, 8), lampRed); r.position.set(sd*7.4, 5.55, HALF + 5.72); g.add(r); const gr = new THREE.Mesh(new THREE.SphereGeometry(.16, 10, 8), lampGreen); gr.position.set(sd*7.4, 4.9, HALF + 5.72); g.add(gr); lamps.push({r, gr}); }
     for (let sz of [-1, 1]) for (let sx of [-1, 1]) {
@@ -1573,7 +1574,7 @@
       for (let k = 0; k < 4; k++) { const l = makeLamp(); l.rotation.y = sz > 0 ? Math.PI/2 : -Math.PI/2; l.position.set(sx*(16 + k*20), 0, sz*(HALF + 1.4)); g.add(l); }
       for (let k = 0; k < 3; k++) { const t = makeTree(); t.position.set(sx*(26 + k*20 + rand(0, 6)), 0, sz*(HALF + 1.6)); g.add(t); }
     }
-    for (let sz of [-1, 1]) { const sw = new THREE.Mesh(new THREE.BoxGeometry(190, .03, 3.6), swMat); sw.position.set(0, .045, sz*(HALF + 1.8)); g.add(sw); }
+    for (let sz of [-1, 1]) { const sw = new THREE.Mesh(new THREE.BoxGeometry(190, .03, 3.6), swMat); sw.position.set(0, .16, sz*(HALF + 1.8)); g.add(sw); }
     const fillers = []; for (const sz of [-1, 1]) for (const sx of [-1, 1]) { let u = HALF + 21; while (u < HALF + 100) { const d = rand(9, 12), h = Math.random() < .7 ? 14 : 26; const b = makeBuilding(12, h, d, false, {axis:'x', sign:-sx}); world.add(b); const e = {m:b, side:sx, row:0, d, dist:290 - sz*(u + d/2), lat:sx*(12.6 + 6), yaw:0, kind:'filler'}; decor.push(e); fillers.push({e, m:b, side:sx}); u += d + .3; } }   /* fillers live in the track space like every house, so they follow the bends */
     world.add(g);
     const dist = 290; addZone(G.dist + dist - 34, G.dist + dist + 34);
@@ -1886,6 +1887,12 @@
   let startBiome = 'city'; document.querySelectorAll('.route[data-bio]').forEach(b => b.addEventListener('click', () => { startBiome = b.dataset.bio; document.querySelectorAll('.route[data-bio]').forEach(x => x.classList.toggle('on', x === b)); b.blur(); }));
   document.querySelectorAll('.route[data-car]').forEach(b => b.addEventListener('click', () => { startCar = b.dataset.car; document.querySelectorAll('.route[data-car]').forEach(x => x.classList.toggle('on', x === b)); b.blur(); }));
   $('startBtn').addEventListener('click', start); $('againBtn').addEventListener('click', start);
+  let quality = 'high'; try { quality = localStorage.getItem('ll-quality') || 'high'; } catch(e){}
+  function applyQuality(){ const low = quality === 'low', dpr = window.devicePixelRatio || 1; renderer.setPixelRatio(low ? Math.min(dpr, 1) : Math.min(dpr, 2)); renderer.shadowMap.enabled = !low; if (dir.shadow.map) { dir.shadow.map.dispose(); dir.shadow.map = null; } dir.shadow.mapSize.set(low ? 1024 : 2048, low ? 1024 : 2048); scene.traverse(o => { if (o.material) { const ms = Array.isArray(o.material) ? o.material : [o.material]; for (const mt of ms) mt.needsUpdate = true; } }); fscene.traverse(o => { if (o.material) { const ms = Array.isArray(o.material) ? o.material : [o.material]; for (const mt of ms) mt.needsUpdate = true; } }); $('menuGfx').textContent = low ? 'Графика: лёгкая' : 'Графика: обычная'; }   /* light: no shadows, no high-dpi rendering; enough for an old laptop or a phone */
+  function setQuality(q){ quality = q; try { localStorage.setItem('ll-quality', q); } catch(e){} applyQuality(); }
+  $('menuGfx').addEventListener('click', () => { setQuality(quality === 'low' ? 'high' : 'low'); $('menuGfx').blur(); });
+  let fpsAcc = 0, fpsN = 0, fpsChecked = false;
+  function watchFps(dt){ if (fpsChecked || quality === 'low' || G.mode !== 'drive') return; fpsAcc += dt; fpsN++; if (fpsN >= 240) { fpsChecked = true; if (fpsN/fpsAcc < 36) { setQuality('low'); announce('ЛЁГКАЯ ГРАФИКА', '', 1600, 'кадры проседали, тени выключены. Вернуть: Esc, Графика'); } } }
   function setView(fp){ G.fp = fp; $('viewBtn').textContent = fp ? 'Вид: из кабины' : 'Вид: сзади'; const U = player.userData; U.glass.opacity = fp ? .12 : (G.damage >= 4 ? .22 : .3); U.glass.depthWrite = false; U.glass.needsUpdate = true; player.children.forEach(c => { if (c.userData.part === 'driver') c.visible = !fp; }); }
   $('viewBtn').addEventListener('click', () => { setView(!G.fp); $('viewBtn').blur(); });
   $('resumeBtn').addEventListener('click', closeMenu); $('restartBtn').addEventListener('click', restartFromMenu); $('menuView').addEventListener('click', () => { setView(!G.fp); $('menuView').blur(); }); $('menuSound').addEventListener('click', () => { $('mute').click(); $('menuSound').blur(); });
@@ -1998,6 +2005,7 @@
     const m = G.mode, live = m === 'drive' || m === 'fight';
     if (G.paused) { renderer.render(m === 'fight' ? fscene : scene, m === 'fight' ? fcam : camera); return; }
     if (!live) engineOff();
+    if (live && !G.paused) watchFps(dt);
     if (live) { G.time += dt; const v = m === 'fight' ? 0 : Math.abs(G.speed)/MAX_SPEED; const gas = m === 'drive' && held.up && !G.empty; G.rate = (G.empty || m === 'fight' || CAR.cart || (G.st && G.inPit && Math.abs(G.speed) < 2)) ? 0 : (CAR.fuelMul || 1)*(RATE_IDLE + (gas ? .3 + 2.8*Math.pow(1 - v, 1.5) : 0) + .9*Math.pow(v, 1.6)*(gas ? 1 : .45)); G.fuel = Math.max(0, G.fuel - dt*G.rate);   /* the engine is off while you are out of the car fighting */
       if (G.fuel <= 0 && !G.empty) { G.empty = true; engineOff(); sfx.empty(); announce('БАК ПУСТ', 'bad', 1800, 'мотор заглох, катимся по инерции'); if (m === 'fight') { F.phase = 'none'; $('fightBars').style.display = 'none'; G.mode = 'drive'; } }
       if (G.empty && m === 'drive' && Math.abs(G.speed) < .25 && !(G.st && G.inPit)) gameOver(); }   /* standing in a queue with an empty tank is not the end: the pump is right there */
@@ -2134,8 +2142,8 @@
       // ---- station ----
       if (G.st) { const st = G.st; st.dist -= dz; place(st.group, st.dist, 0, 0); if (m === 'drive') updateStation(dt); if (G.st && G.st.dist < -60) { removeStation(); G.eventTimer = 5; prompt(drivePrompt()); } }
       // ---- scenery ----
-      for (const e of pathUsers) { if (e.gone > 0) { e.gone -= dt; if (e.gone <= 0) { e.m = e.kind === 'bike' ? makeBike() : makePram(); world.add(e.m); e.dist = 300 + Math.random()*40; e.dir = 1; e.grace = 3; } continue; } e.dist -= dz; e.t += dt; e.dist += e.dir*e.speed*dt; if (e.kind === 'bike') { if (e.home === undefined) { e.home = e.lat; e.grace = 3; } if (e.grace > 0) e.grace -= dt; const slow = rideSteer(e, 6.9, 8.1, dt); e.dist += e.dir*(slow ? -e.speed*.5 : 0)*dt; if ((G.mode === 'drive' && Math.abs(G.speed) > 1.5 && Math.abs(e.dist) < 2.8 && Math.abs(e.lat - G.x) < 1.5) || (!(e.grace > 0) && Math.abs(e.dist) < 200 && rideContact(e))) { if (e.m.userData.rider) e.m.userData.rider.visible = false; runnersAt(e.dist, e.lat, 1); flingRide(e); e.gone = 8; continue; } } if (e.kind === 'pram') { if (e.hitT > 0) { e.hitT -= dt; e.dist -= e.dir*e.speed*dt; } else if (G.mode === 'drive' && Math.abs(G.speed) > .8 && Math.abs(e.dist) < 2.4 && Math.abs(e.lat - G.x) < 1.5) { e.hitT = 3; e.kv = 22*Math.sign(G.speed); crash(); G.speed = 0; sfx.horn(); } if (e.kv) { e.dist += e.kv*dt; e.kv *= Math.pow(.02, dt); if (Math.abs(e.kv) < .3) e.kv = 0; } }   /* a pram is a concrete wall: a stage of damage and a dead stop; she is shoved a few metres on and stands there, so you can steer past without reversing */ if (e.dist < -40) { e.dist = 300 + Math.random()*40; e.dir = 1; } else if (e.dist > 340) { e.dist = -30; e.dir = -1; } const vis = biomeAt(e.dist + G.dist) === 'city' && !crossings.some(c => Math.abs(e.dist - c.dist) < c.half + 4) && !(G.st && e.side === G.st.side && e.dist > G.st.dist - G.st.group.userData.tail - 6 && e.dist < G.st.dist - G.st.group.userData.front + 6); e.m.visible = vis; if (vis) { if (e.kind === 'bike' || e.kind === 'pram') e.m.userData.y0 = e.kind === 'bike' ? .07 : .04; place(e.m, e.dist, e.lat, e.dir > 0 ? 0 : Math.PI);   /* the path is 3.6 cm proud of the road: wheels roll on it, not in it */ const L = e.m.userData.limbs; if (e.kind === 'bike' && e.m.userData.thighs) { const ph = e.t*e.speed*2.6; for (let q = 0; q < 2; q++) { const a = ph + q*Math.PI; e.m.userData.thighs[q].rotation.x = 1.15 - Math.sin(a)*.42; e.m.userData.shins[q].rotation.x = -.95 + Math.sin(a)*.5 - Math.cos(a)*.15; } } else if (L) { const sw = Math.sin(e.t*6)*.45; L[0].rotation.x = sw; L[2].rotation.x = -sw; L[1].rotation.x = -.5; L[3].rotation.x = -.5; } } }
-      for (const e of scooters) { e.dist -= dz; e.t += dt; e.dist += e.dir*e.speed*dt; if (e.dist < -40) { e.dist = 300 + Math.random()*40; e.dir = 1; e.speed = rand(3.5, 6); } else if (e.dist > 340) { e.dist = -30; e.dir = -1; } const vis = biomeAt(e.dist + G.dist) === 'city' && !crossings.some(c => Math.abs(e.dist - c.dist) < c.half + 4) && !(G.st && e.side === G.st.side && e.dist > G.st.dist - G.st.group.userData.tail - 6 && e.dist < G.st.dist - G.st.group.userData.front + 6); if (e.gone > 0) { e.gone -= dt; if (e.gone <= 0) { e.m = makeScooter(Math.random() < .85); world.add(e.m); e.dist = 300 + Math.random()*40; e.dir = 1; e.grace = 3; } continue; } if (e.home === undefined) { e.home = e.lat; e.grace = 3; } if (e.grace > 0) e.grace -= dt; const slow = rideSteer(e, 8.45, 11.6, dt); e.dist += e.dir*(slow ? -e.speed*.6 : 0)*dt; if ((G.mode === 'drive' && Math.abs(G.speed) > 1.5 && Math.abs(e.dist) < 2.8 && Math.abs(e.lat - G.x) < 1.5) || (!(e.grace > 0) && Math.abs(e.dist) < 200 && rideContact(e))) { runnersAt(e.dist, e.lat, e.m.children.length > 7 ? 2 : 1); flingRide(e); e.gone = 8; continue; } e.m.visible = vis; if (vis) { if (e.kind === 'bike' || e.kind === 'pram') e.m.userData.y0 = e.kind === 'bike' ? .07 : .04; place(e.m, e.dist, e.lat, e.dir > 0 ? 0 : Math.PI);   /* the path is 3.6 cm proud of the road: wheels roll on it, not in it */ e.m.rotation.z += Math.sin(e.t*3)*.03; } }
+      for (const e of pathUsers) { if (e.gone > 0) { e.gone -= dt; if (e.gone <= 0) { e.m = e.kind === 'bike' ? makeBike() : makePram(); world.add(e.m); e.dist = 300 + Math.random()*40; e.dir = 1; e.grace = 3; } continue; } e.dist -= dz; e.t += dt; e.dist += e.dir*e.speed*dt; if (e.kind === 'bike') { if (e.home === undefined) { e.home = e.lat; e.grace = 3; } if (e.grace > 0) e.grace -= dt; const slow = rideSteer(e, 6.9, 8.1, dt); e.dist += e.dir*(slow ? -e.speed*.5 : 0)*dt; const byCar = G.mode === 'drive' && Math.abs(G.speed) > 1.5 && Math.abs(e.dist) < 2.8 && Math.abs(e.lat - G.x) < 1.5; if (byCar || (!(e.grace > 0) && Math.abs(e.dist) < 200 && rideContact(e))) { if (byCar) crash(.85); if (e.m.userData.rider) e.m.userData.rider.visible = false; runnersAt(e.dist, e.lat, 1); flingRide(e); e.gone = 8; continue; } } if (e.kind === 'pram') { if (e.hitT > 0) { e.hitT -= dt; e.dist -= e.dir*e.speed*dt; } else if (G.mode === 'drive' && Math.abs(G.speed) > .8 && Math.abs(e.dist) < 2.4 && Math.abs(e.lat - G.x) < 1.5) { e.hitT = 3; e.kv = 22*Math.sign(G.speed); crash(); G.speed = 0; sfx.horn(); } if (e.kv) { e.dist += e.kv*dt; e.kv *= Math.pow(.02, dt); if (Math.abs(e.kv) < .3) e.kv = 0; } }   /* a pram is a concrete wall: a stage of damage and a dead stop; she is shoved a few metres on and stands there, so you can steer past without reversing */ if (e.dist < -40) { e.dist = 300 + Math.random()*40; e.dir = 1; } else if (e.dist > 340) { e.dist = -30; e.dir = -1; } const vis = biomeAt(e.dist + G.dist) === 'city' && !crossings.some(c => Math.abs(e.dist - c.dist) < c.half + 4) && !(G.st && e.side === G.st.side && e.dist > G.st.dist - G.st.group.userData.tail - 6 && e.dist < G.st.dist - G.st.group.userData.front + 6); e.m.visible = vis; if (vis) { if (e.kind === 'bike' || e.kind === 'pram') e.m.userData.y0 = e.kind === 'bike' ? .07 : .04; place(e.m, e.dist, e.lat, e.dir > 0 ? 0 : Math.PI);   /* the path is 3.6 cm proud of the road: wheels roll on it, not in it */ const L = e.m.userData.limbs; if (e.kind === 'bike' && e.m.userData.thighs) { const ph = e.t*e.speed*2.6; for (let q = 0; q < 2; q++) { const a = ph + q*Math.PI; e.m.userData.thighs[q].rotation.x = 1.15 - Math.sin(a)*.42; e.m.userData.shins[q].rotation.x = -.95 + Math.sin(a)*.5 - Math.cos(a)*.15; } } else if (L) { const sw = Math.sin(e.t*6)*.45; L[0].rotation.x = sw; L[2].rotation.x = -sw; L[1].rotation.x = -.5; L[3].rotation.x = -.5; } } }
+      for (const e of scooters) { e.dist -= dz; e.t += dt; e.dist += e.dir*e.speed*dt; if (e.dist < -40) { e.dist = 300 + Math.random()*40; e.dir = 1; e.speed = rand(3.5, 6); } else if (e.dist > 340) { e.dist = -30; e.dir = -1; } const vis = biomeAt(e.dist + G.dist) === 'city' && !crossings.some(c => Math.abs(e.dist - c.dist) < c.half + 4) && !(G.st && e.side === G.st.side && e.dist > G.st.dist - G.st.group.userData.tail - 6 && e.dist < G.st.dist - G.st.group.userData.front + 6); if (e.gone > 0) { e.gone -= dt; if (e.gone <= 0) { e.m = makeScooter(Math.random() < .85); world.add(e.m); e.dist = 300 + Math.random()*40; e.dir = 1; e.grace = 3; } continue; } if (e.home === undefined) { e.home = e.lat; e.grace = 3; } if (e.grace > 0) e.grace -= dt; const slow = rideSteer(e, 8.45, 11.6, dt); e.dist += e.dir*(slow ? -e.speed*.6 : 0)*dt; const byCar = G.mode === 'drive' && Math.abs(G.speed) > 1.5 && Math.abs(e.dist) < 2.8 && Math.abs(e.lat - G.x) < 1.5; if (byCar || (!(e.grace > 0) && Math.abs(e.dist) < 200 && rideContact(e))) { if (byCar) crash(.85); runnersAt(e.dist, e.lat, e.m.children.length > 7 ? 2 : 1); flingRide(e); e.gone = 8; continue; }   /* run one down and it costs you, the same as a cyclist */ e.m.visible = vis; if (vis) { if (e.kind === 'bike' || e.kind === 'pram') e.m.userData.y0 = e.kind === 'bike' ? .07 : .04; place(e.m, e.dist, e.lat, e.dir > 0 ? 0 : Math.PI);   /* the path is 3.6 cm proud of the road: wheels roll on it, not in it */ e.m.rotation.z += Math.sin(e.t*3)*.03; } }
       for (const e of litter) { e.dist -= dz; e.t += dt; if (e.dist < -30) { e.dist += 320; e.lat = rand(-6, 6); } const near = Math.abs(e.dist) < 7 && Math.abs(e.lat - G.x) < 3.2 && Math.abs(G.speed) > 3; if (near) { e.lift = Math.max(e.lift, .6 + Math.abs(G.speed)*.05); e.vLat += Math.sign(e.lat - G.x || 1)*dt*8; e.vAlong += Math.abs(G.speed)*dt*2; } for (const o of obstacles) if (o.kind === 'car' && Math.abs(o.dist - e.dist) < 4 && Math.abs(o.lat - e.lat) < 2.4 && o.speed > 3) { e.lift = Math.max(e.lift, .5); e.vAlong += o.speed*dt*1.5; } e.lift = Math.max(0, e.lift - dt*.7); e.vLat *= Math.max(0, 1 - dt*1.5); e.vAlong *= Math.max(0, 1 - dt*1.2); e.lat += (e.vLat + Math.sin(e.t*.9 + e.ph)*.25)*dt; e.dist += (e.vAlong + Math.sin(e.t*.5 + e.ph)*.6)*dt; e.lat = Math.max(-11, Math.min(11, e.lat)); place(e.m, e.dist, e.lat, e.ph + e.t*.4); e.m.position.y += e.lift*(.5 + .5*Math.sin(e.t*6 + e.ph)) + .02; e.m.rotation.x += e.lift > .05 ? Math.sin(e.t*7)*e.lift : 0; e.m.rotation.z = e.lift*1.5; e.m.visible = biomeAt(e.dist + G.dist) === 'city'; }
       for (const e of bioDecor) { e.dist -= dz; if (e.dist < -30) e.dist += 360; const vis = biomeAt(e.dist + G.dist) === e.bio && !crossings.some(c => Math.abs(e.dist - c.dist) < c.half + 12) && !(G.st && e.side === G.st.side && e.dist > G.st.dist - G.st.group.userData.tail - 6 && e.dist < G.st.dist - G.st.group.userData.front + 6); e.m.visible = vis; if (vis) place(e.m, e.dist, e.lat, e.yaw); }
       for (const d of dashes) { d.dist -= dz; if (d.dist < -24) d.dist += 272; else if (d.dist > 248) d.dist -= 272; const bio = biomeAt(d.dist + G.dist); d.m.visible = !(bio === 'steppe' && d.lat < 0) && !rforks.some(f => !f.decided && d.dist + G.dist > f.s); place(d.m, d.dist, bio === 'steppe' ? 0 : d.lat, 0); }
@@ -2258,6 +2266,6 @@
     hudT += dt; if (hudT > .1) { hudT = 0; if (m !== 'menu') updateHud(); }
     renderer.render(scene, camera);
   }
-  updateTrack(0); updateRibbons(); resize(); setPad('drive'); requestAnimationFrame(frame);
+  applyQuality(); updateTrack(0); updateRibbons(); resize(); setPad('drive'); requestAnimationFrame(frame);
 })();
 </script>
