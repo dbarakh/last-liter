@@ -76,6 +76,7 @@
   .eyebrow{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);margin:0 0 10px;}
   h1{font-family:var(--display);font-weight:400;font-size:clamp(26px,6vw,44px);line-height:1.05;margin:0 0 14px;text-wrap:balance;}
   .card p{margin:0 0 12px;line-height:1.5;color:var(--ink-dim);max-width:52ch;}
+  .brief{margin:0 0 18px;padding:0 0 0 18px;font-size:13px;line-height:1.45;color:var(--ink-dim);max-width:60ch;} .brief li{margin:0 0 6px;} .brief b{color:var(--ink);font-weight:500;}
   .rules{display:grid;grid-template-columns:auto 1fr;gap:8px 14px;margin:16px 0 22px;font-size:14px;align-items:center;}
   .rules kbd{font:500 12px/1 var(--body);background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-bottom-width:3px;border-radius:6px;padding:6px 9px;white-space:nowrap;}
   .rules span{color:var(--ink-dim);} .rules b{color:var(--ink);font-weight:500;}
@@ -127,6 +128,15 @@
     <div class="card" id="startCard">
       <p class="eyebrow">Бак почти пуст</p>
       <h1>Последний литр</h1>
+      <ul class="brief">
+        <li><b>Цель</b> одна: проехать как можно дальше, пока есть бензин.</li>
+        <li><b>Заправки.</b> Бензин есть не на всех, смотри на табло. Очередь длинная, поэтому влезай: коснись любой машины в очереди, её водитель выйдет драться. Победил, место твоё. Проиграл, тебя выкинут на дорогу.</li>
+        <li><b>Расход.</b> Больше всего топлива уходит на разгон. Старайся не терять скорость и не врезаться.</li>
+        <li><b>Удары.</b> Машина, коляска, остановка: полная остановка и урон кузову. Самокатчик или велосипедист: урон, но скорость почти не теряешь, а за сбитый самокат капает немного бензина. Столбы, деревья, урны, лавочки, столбики и ограждения: только искры.</li>
+        <li><b>Трейлер с аппарелью</b> это трамплин: разгонись и прыгай, за ним всегда чисто.</li>
+        <li><b>Драка:</b> серии ударов, пока противник не поставит блок. Чем дальше заехал, тем злее водители.</li>
+        <li><b>Телега</b> едет без бензина, лошадь подстёгивается стрелкой вверх.</li>
+      </ul>
       <p class="eyebrow" style="margin:0 0 8px">На чём едем</p>
       <div class="routes cars"><button class="route on" type="button" data-car="lada">Шестёрка</button><button class="route" type="button" data-car="cart">Телега с лошадью</button></div>
       <button class="go" id="startBtn" type="button">Завести мотор</button>
