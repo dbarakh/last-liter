@@ -1739,7 +1739,7 @@
     G.st = {s, group:g, q, side, laneX:PIT_X*side, markers, dist:170 + (s.type === 'queue' ? (s.n - 1)*SPACING : 0), serve:SERVE, revealed:true, filling:0, filled:false, wasInLane:false, noFuelTold:false};
     for (const f of g.userData.fillers || []) { g.remove(f.m); world.add(f.m); const e = {m:f.m, side:f.side, row:0, d:f.z1 - f.z0, dist:G.st.dist - (f.z0 + f.z1)/2, lat:side*20.6, yaw:0, kind:'filler'}; f.e = e; decor.push(e); }
     $('board').style.display = 'block'; updateBoard();
-    prompt('съезд на заправку за край дороги · встань в <span class="gap">зелёный зазор</span> или за последней машиной');
+    prompt(PROMPT_DRIVE);   /* no coaching at the station: the board says what there is, the rest you work out */
   }
 
   // ---- queue helpers ----
