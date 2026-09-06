@@ -720,7 +720,7 @@
       const pos = r.m.geometry.attributes.position.array, width = Math.abs(r.l1 - r.l0);
       const ground = !!r.ground, wire = r.yOff > 1, road = !ground && !wire && r.yOff === 0, pave = r.sideTag !== 0 && width > 1, kerb = r.yOff === .12, edge = r.sideTag !== 0 && width < .5;
       const cut = st && r.sideTag === st.side, U = cut ? st.group.userData : null;
-      const cLo = cut ? (pave ? st.dist - U.tail + 26 : st.dist - U.tail - 6) : 0, cHi = cut ? (pave ? st.dist - U.front - 24 : st.dist - U.front + 6) : 0;
+      const cLo = cut ? ((pave && !r.bike) ? st.dist - U.tail + 26 : st.dist - U.tail - 6) : 0, cHi = cut ? ((pave && !r.bike) ? st.dist - U.front - 24 : st.dist - U.front + 6) : 0;   /* the bike path is gone from taper to taper: nothing red at the exit */
       const colArr = ground ? r.m.geometry.attributes.color.array : null;
       for (let i = 0; i < n; i++) {
         const c = Math.cos(T.sth[i]), sn = Math.sin(T.sth[i]), k = i*6, d = T.dMin + i*T.ds, S = d + g0;
@@ -732,7 +732,7 @@
         if ((pave || kerb) && T.bp[i] < 1) y -= (1 - T.bp[i])*(r.yOff + .6);
         if (wire && (T.bp[i] < .5 || inRb || T.fs[i])) l1 = l0;
         if (T.fs[i] && (road || edge || kerb || pave)) l1 = l0;   /* past an undecided fork the ribbon simply stops: the static Y is the road there */
-        if ((edge || kerb || pave) && typeof crossings !== 'undefined' && crossings.some(c => Math.abs(d - c.dist) < c.half + 13.4)) l1 = l0;   /* inside a junction the street's own kerbs and pavements stop: the junction brings its own, nothing lies on top of anything */
+        if ((edge || kerb || pave) && typeof crossings !== 'undefined' && crossings.some(c => Math.abs(d - c.dist) < c.half + 3.5)) l1 = l0;   /* inside a junction the street's own kerbs and pavements stop: the junction brings its own, nothing lies on top of anything */
         if (inRb) { if (ground) { l0 = -12.5; l1 = 12.5; } else if (!wire && r.yOff > 0) y -= r.yOff + .6; }
         pos[k] = T.sx[i] + l0*c; pos[k + 1] = y; pos[k + 2] = T.sz[i] + l0*sn; pos[k + 3] = T.sx[i] + l1*c; pos[k + 4] = y; pos[k + 5] = T.sz[i] + l1*sn;
         if (colArr) { colArr[k] = colArr[k + 3] = T.bc[i*3]; colArr[k + 1] = colArr[k + 4] = T.bc[i*3 + 1]; colArr[k + 2] = colArr[k + 5] = T.bc[i*3 + 2]; }
@@ -751,7 +751,7 @@
   makeRibbon(-6.6, 6.6, 0, roadMat, true);
   makeRibbon(-6.29, -6.11, .05, edgeMat, false, -1); makeRibbon(6.11, 6.29, .05, edgeMat, false, 1);
   makeRibbon(-12.4, -6.5, .03, swMat, true, -1); makeRibbon(6.5, 12.4, .03, swMat, true, 1);
-  const bikeLaneMat = std(0x7a3a3a, {roughness:1, side:THREE.DoubleSide}); makeRibbon(-8.3, -6.7, .09, bikeLaneMat, true, -1); makeRibbon(6.7, 8.3, .09, bikeLaneMat, true, 1);   /* a red bike path on the kerb side of the pavement */
+  const bikeLaneMat = std(0x7a3a3a, {roughness:1, side:THREE.DoubleSide}); makeRibbon(-8.3, -6.7, .09, bikeLaneMat, true, -1); makeRibbon(6.7, 8.3, .09, bikeLaneMat, true, 1); ribbons[ribbons.length - 1].bike = ribbons[ribbons.length - 2].bike = true;   /* a red bike path on the kerb side of the pavement */
   const kerbMat = std(0xb9b4a8, {roughness:.9, side:THREE.DoubleSide});
   makeRibbon(-6.7, -6.45, .12, kerbMat, false, -1); makeRibbon(6.45, 6.7, .12, kerbMat, false, 1);   // kerb stones, 12 cm proud of the road
 
@@ -982,7 +982,7 @@
   const trashMats = [std(0xd8d0c0, {roughness:1}), std(0x6a8a3a, {roughness:.4}), std(0xc9a84a, {roughness:1}), std(0xe8e4d8, {roughness:1}), std(0x8a3a2a, {roughness:.8})];
   // scooters: one or two riders on a kick scooter, buzzing along the pavement both ways
   function runnersAt(dist, lat, n){ let k = 0; for (const pd of peds) { if (k >= n) break; if (pd.dist > -25 && pd.dist < 250) continue; spawnPed(pd, dist + rand(-.5, .5)); pd.lat = lat + rand(-.4, .4); pd.side = Math.sign(lat) || 1; pd.state = 'dodge'; pd.target = pd.side*rand(9.5, 11); pd.hop = 1; pd.dir = 1; k++; } }
-  function flingRide(e){ const m = e.m; m.getWorldPosition(new THREE.Vector3()); const wp = new THREE.Vector3(); m.getWorldPosition(wp); world.remove(m); m.position.copy(wp); m.rotation.set(0, 0, 0); scene.add(m); launch(m, new THREE.Vector3(Math.sign(e.lat - G.x || 1)*rand(2, 5), rand(5, 8), rand(3, 7))); sfx.knock(); for (let q = 0; q < 8; q++) chunk(.05, .05, .05, sparkMat, e.lat - G.x + rand(-.4, .4), rand(.2, .8), -e.dist + rand(-.5, .5), new THREE.Vector3(rand(-5, 5), rand(2, 6), rand(2, 8))); }
+  function flingRide(e){ const m = e.m; m.getWorldPosition(new THREE.Vector3()); const wp = new THREE.Vector3(); m.getWorldPosition(wp); world.remove(m); m.position.copy(wp); m.rotation.set(0, 0, 0); scene.add(m); launch(m, new THREE.Vector3(Math.sign(e.lat - G.x || 1)*rand(1.5, 3), rand(1.5, 3), rand(1, 3))); sfx.knock(); for (let q = 0; q < 8; q++) chunk(.05, .05, .05, sparkMat, e.lat - G.x + rand(-.4, .4), rand(.2, .8), -e.dist + rand(-.5, .5), new THREE.Vector3(rand(-5, 5), rand(2, 6), rand(2, 8))); }
   // a ride on the pavement steers round furniture and people; when it still touches something it goes down and everyone runs
   function rideSteer(e, lo, hi, dt){
     // everything within a few metres ahead on this pavement: furniture, other rides, walkers. Take the nearest line that clears all of it; if there is none, the line with the most room, slowly
@@ -2109,7 +2109,8 @@
       // ground under the car: the road, or the ramp/deck of a transporter you drove onto
       { let gh = 0, slope = 0;
         if (CAR.over) for (const o of obstacles) { if (o.kind !== 'car' || o.bus || o.dead || o.halfL > 3 || o.roller || Math.abs(o.lat - G.x) > o.halfW + 1.0 || Math.abs(o.dist) > o.halfL + 1.6) continue; const top = 1.45*o.mesh.scale.y, tt = Math.max(0, Math.min(1, (o.halfL + 1.6 - Math.abs(o.dist))/1.8)), sm = tt*tt*(3 - 2*tt); gh = Math.max(gh, top*sm); if (o.crushed && o.mesh.scale.y > .63) o.mesh.scale.y += (.62 - o.mesh.scale.y)*Math.min(1, dt*5); if (!o.crushed && Math.abs(o.dist) < o.halfL + .6) { o.crushed = true; sfx.crash(); G.shake = Math.max(G.shake, .5); G.rollV += (Math.random() < .5 ? -1 : 1)*1.5; for (let q = 0; q < 14; q++) chunk(.06, .06, .06, sparkMat, o.lat - G.x + rand(-.9, .9), .6, -o.dist + rand(-1.5, 1.5), new THREE.Vector3(rand(-6, 6), rand(2, 6), rand(2, 9))); } }
-        for (const o of obstacles) { if (o.kind !== 'ramp') continue; const u = o.halfL - o.dist; const U = o.mesh.userData, onIt = Math.abs(o.lat - G.x) <= o.halfW + .2; /* u: 0 at the ramp foot (nearest end), growing along the transporter */ if (u < 0 || u > U.rampL + U.deckL) { if (G.onRamp === o) G.onRamp = null; continue; } if (onIt && (G.onRamp === o || u < 1.5)) { G.onRamp = o; if (u <= U.rampL) { gh = U.deckH*(u/U.rampL); slope = U.deckH/U.rampL; } else gh = U.deckH; } else if (G.onRamp !== o && Math.abs(o.lat - G.x) < o.halfW + 1.3) { /* you cannot climb aboard from the side: the transporter is a wall there */ const push = G.x > o.lat ? 1 : -1; G.x += push*dt*9; G.speed *= Math.max(0, 1 - dt*4); if (G.hitCool <= 0) { crash(.5); G.hitCool = .7; } } else if (G.onRamp === o && !onIt) G.onRamp = null; }
+        G.rampGrace = Math.max(0, (G.rampGrace || 0) - dt);
+        for (const o of obstacles) { if (o.kind !== 'ramp') continue; const u = o.halfL - o.dist; const U = o.mesh.userData, onIt = Math.abs(o.lat - G.x) <= o.halfW + .2; /* u: 0 at the ramp foot (nearest end), growing along the transporter */ if (u < 0 || u > U.rampL + U.deckL) { if (G.onRamp === o) { G.onRamp = null; G.rampGrace = 1.2; } continue; } if (onIt && (G.onRamp === o || u < 1.5)) { G.onRamp = o; if (u <= U.rampL) { gh = U.deckH*(u/U.rampL); slope = U.deckH/U.rampL; } else gh = U.deckH; } else if (G.onRamp !== o && Math.abs(o.lat - G.x) < o.halfW + 1.3 && G.py < .4 && !(G.rampGrace > 0)) { /* you cannot climb aboard from the side: the transporter is a wall there. But not while you are flying off it or have just left it */ const push = G.x > o.lat ? 1 : -1; G.x += push*dt*9; G.speed *= Math.max(0, 1 - dt*4); if (G.hitCool <= 0) { crash(.5); G.hitCool = .7; } } else if (G.onRamp === o && !onIt) { G.onRamp = null; G.rampGrace = 1.2; } }
         if (gh > G.groundH + .01 && G.py < gh - .05 && G.py <= G.groundH + .01) { /* nose into the ramp foot: climb */ }
         G.rampSlope = slope; G.groundH = gh; }
       if (G.py < G.groundH - .001 && G.pvy <= 0.001) { G.py = G.groundH; G.pvy = 0; }
