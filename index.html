@@ -8,6 +8,7 @@
 <meta property="og:title" content="Последний литр">
 <meta property="og:description" content="Гонка по вечернему городу на последнем литре бензина. Играть в браузере.">
 <meta property="og:image" content="assets/hero.jpg">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Ctext y=%27.9em%27 font-size=%2790%27%3E%E2%9B%BD%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Rubik+Mono+One&family=Rubik:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
@@ -38,7 +39,7 @@
   .step{background:var(--panel);border:1px solid rgba(255,255,255,.08);border-top:3px solid var(--accent);border-radius:12px;padding:20px 20px 18px;}
   .step::before{counter-increment:s;content:counter(s);display:inline-block;font-family:var(--display);color:var(--accent);font-size:22px;margin-bottom:8px;}
   .step h3{margin:0 0 6px;font-size:17px;} .step p{margin:0;color:var(--ink-dim);font-size:15px;}
-  .gallery{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px;}
+  .gallery{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px;} .gallery.two{grid-template-columns:repeat(auto-fit,minmax(340px,1fr));}
   figure{margin:0;} figure img{display:block;width:100%;border-radius:12px;border:1px solid rgba(255,255,255,.1);background:#000;aspect-ratio:16/9;object-fit:cover;}
   figcaption{color:var(--ink-dim);font-size:14px;margin-top:8px;}
   .rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;}
@@ -65,7 +66,7 @@
     <p class="lead">Вечер, бак почти пуст, впереди город. Задача одна: уехать как можно дальше. Заправки есть, но не на всех есть бензин, а где есть, там очередь на полквартала. Влезай, дерись за место, заправляйся и езжай дальше.</p>
     <div class="cta"><a class="btn" href="play.html">Играть</a><a class="btn ghost" href="#how">Как играть</a><small>Работает в браузере на компьютере и телефоне. На телефоне кнопки на экране.</small></div>
   </div>
-  <img class="shot" src="assets/hero.jpg" alt="Шестёрка с холодильником на крыше едет по вечернему городу">
+  <a href="play.html"><img class="shot" src="assets/hero.jpg" alt="Шестёрка с холодильником на крыше едет по вечернему городу"></a>
 </div></div>
 
 <section id="how"><div class="wrap">
@@ -80,13 +81,15 @@
 </div></section>
 
 <section id="street"><div class="wrap">
-  <h2>Что на улице</h2>
-  <p class="sub">Город живёт своей жизнью, и почти всё в нём можно задеть. Но не всё одинаково больно.</p>
-  <div class="gallery">
+  <h2>Заправка и драка</h2>
+  <p class="sub">Две вещи, вокруг которых крутится игра.</p>
+  <div class="gallery two">
     <figure><img src="assets/station.jpg" alt="Очередь на заправку"><figcaption>Заправка с очередью. Табло говорит, есть ли бензин. Любое касание машины в очереди начинает драку за место.</figcaption></figure>
     <figure><img src="assets/fight.jpg" alt="Драка с водителем"><figcaption>Драка: серии ударов руками и ногами, пока противник не поставит блок. Удар в прыжке бьёт сильнее.</figcaption></figure>
   </div>
-  <div class="rules" style="margin-top:26px">
+  <h2 style="margin-top:40px">Что можно задеть</h2>
+  <p class="sub">Почти всё в городе можно зацепить, но не всё одинаково больно.</p>
+  <div class="rules">
     <div class="rule"><i></i><div><b>Машина, коляска, остановка</b><span>Полная остановка и ступень урона кузову. Десять ступеней, и шестёрка разваливается.</span></div></div>
     <div class="rule warn"><i></i><div><b>Самокатчик, велосипедист</b><span>Ступень урона, скорость почти не теряешь. За сбитый самокат капает немного бензина.</span></div></div>
     <div class="rule ok"><i></i><div><b>Столбы, деревья, урны, лавочки, столбики</b><span>Только искры и грохот, машина не замечает.</span></div></div>
