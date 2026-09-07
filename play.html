@@ -966,7 +966,11 @@
     const sign = textPlane([{text:'А'}], .9, 1.1, {bg:'#e3b52a', fg:'#2b1608', border:'#2b1608'}); sign.position.set(-.4, 3.2, -2.6); sign.rotation.y = -Math.PI/2; g.add(sign);
     return g;
   }
-  for (let i = 0; i < 3; i++) { const st = makeStop(); world.add(st); decor.push({m:st, side:1, row:0, d:0, dist:40 + i*110 + rand(0, 40), lat:9.3, yaw:0, kind:'stop', r:.9}); }
+  // the yellow zigzag of marking 1.17 along the kerb at every stop: twelve legs, each placed on the track on its own
+  const zigMat = std(0xf2c614, {roughness:.7});
+  function makeZigzag(){ const legs = []; for (let k = 0; k < 12; k++) { const m = new THREE.Mesh(new THREE.BoxGeometry(.12, .02, 2.09), zigMat); m.userData.y0 = .05; world.add(m); legs.push({m, u:-12 + 1 + k*2, yaw:(k % 2 ? -1 : 1)*.29}); } return legs; }
+  function updateZigzag(e){ for (const z of e.zz) { z.m.visible = e.m.visible; if (e.m.visible) place(z.m, e.dist + z.u, e.side*5.75, z.yaw); } }
+  for (let i = 0; i < 3; i++) { const st = makeStop(); world.add(st); decor.push({m:st, side:1, row:0, d:0, dist:40 + i*110 + rand(0, 40), lat:9.3, yaw:0, kind:'stop', r:.9, zz:makeZigzag()}); }
   setTimeout(() => { for (const e of decor) if (e.kind === 'stop') populateStop(e); for (const g of parks) populatePark(g); }, 0);
   // ---- scenery that belongs to one biome only: placed by track distance like everything else, shown where its biome runs
   function makeBush(){ const g = new THREE.Group(); const m = new THREE.Mesh(new THREE.DodecahedronGeometry(rand(.6, 1.1), 0), std(pick([0x6f7a3a, 0x8a8a4a, 0x5f6b33]), {flatShading:true})); m.position.y = .5; g.add(m); return g; }
@@ -2251,7 +2255,7 @@
       for (const e of decor) {
         e.dist -= dz; if (e.dist + e.d/2 < -30) { recycleDecor(e); if (e.hit) { e.hit = false; e.m = e.kind === 'lamp' ? makeLamp() : e.kind === 'stop' ? makeStop() : e.kind === 'bin' ? makeBin() : e.kind === 'bench' ? makeBenchS() : makeTree(); if (e.kind === 'lamp') e.m.scale.x = e.side; if (e.kind === 'bench') e.m.scale.x = e.side; world.add(e.m); } } else if (!e.row && e.kind !== 'lot' && e.kind !== 'park' && e.kind !== 'shop' && e.kind !== 'filler' && e.kind !== 'bb' && e.dist > 330) e.dist -= 300;   /* car parks and parks belong to their house and move with it */
         if (e.hit) continue;
-        { let lat = e.lat; const len = (e.row || e.kind === 'filler') ? e.d : (e.kind === 'park' || e.kind === 'shop') ? e.m.userData.len : e.kind === 'lot' ? 18 : 0; if (len > 8) lat += Math.sign(e.lat)*bendShift(e.dist, e.lat, len); place(e.m, e.dist, lat, e.yaw); } if (e.row) fadeWindows(e.m, e.dist); if (e.segs) updateRail(e);
+        { let lat = e.lat; const len = (e.row || e.kind === 'filler') ? e.d : (e.kind === 'park' || e.kind === 'shop') ? e.m.userData.len : e.kind === 'lot' ? 18 : 0; if (len > 8) lat += Math.sign(e.lat)*bendShift(e.dist, e.lat, len); place(e.m, e.dist, lat, e.yaw); } if (e.row) fadeWindows(e.m, e.dist); if (e.segs) updateRail(e); if (e.zz) updateZigzag(e);
         if (e.bb) { const bd = e.dist + e.bb.offset; const inSt = (G.st && e.side === G.st.side && bd > G.st.dist - G.st.group.userData.tail - 16 && bd < G.st.dist + 44) || crossings.some(c => Math.abs(bd - c.dist) < 36 + c.half); e.bb.panel.parent.visible = !inSt && !!(e.lot && e.lot.m.visible);   /* the board stands on its car park; when the park is hidden for a junction, so is the board */ if (!inSt && bd > -20 && bd < 220) { let lines, key;
             if (G.st && G.st.dist - bd > 0) { const dd = Math.round((G.st.dist - bd)/50)*50, sst = G.st.s; key = 'st' + dd + sst.name; lines = [{text:'АЗС «' + sst.name + '» через ' + dd + ' м'}, {text: sst.type === 'closed' ? 'закрыто' : sst.fuel > 0 ? 'бензин есть' : 'бензина нет'}]; }
             else if (G.fork && !G.fork.decided && G.fork.dist - bd > 0) { const dd = Math.round((G.fork.dist - bd)/50)*50; key = 'fork' + dd; lines = [{text:'ДО РАЗВИЛКИ ' + dd + ' м'}, {text:'«' + G.fork.A.name + '» слева · «' + G.fork.B.name + '» справа'}]; }
