@@ -134,7 +134,6 @@
       <p class="eyebrow" style="margin:0 0 8px">На чём едем</p>
       <div class="routes cars"><button class="route on" type="button" data-car="lada"><img id="thumbLada" alt="">Авто</button><button class="route" type="button" data-car="cart"><img id="thumbCart" alt="">Телега</button></div>
       <button class="go" id="startBtn" type="button">Завести мотор</button>
-      <button class="route" id="polyBtn" type="button" style="margin-top:10px;width:100%">Полигон: всё сразу, O обзор мышью</button>
     </div>
     <div class="card" id="menuCard" hidden>
       <p class="eyebrow">Пауза</p>
@@ -1512,7 +1511,7 @@ const SQUEAL_B64 = 'SUQzBAAAAAAAIlRTU0UAAAAOAAADTGF2ZjYyLjMuMTAwAAAAAAAAAAAAAAD/
   $('bestv').textContent = km(best);
   let MAX_SPEED = 100/3.6; const FILL_SECONDS = 100, START_FUEL = 180, RATE_IDLE = .4, RATE_MAX = 2.2, SERVE = 5.5, GIVE_UP = 9, GAP_MIN = 5.3, PLAYER_HALF = 2.4, ROAD_HALF = 5.4;
 
-  function engineOff(){ if (engineGain && AC) { engineGain.gain.setTargetAtTime(0, AC.currentTime, .05); brakeGain.gain.setTargetAtTime(0, AC.currentTime, .05); if (roadGain) roadGain.gain.setTargetAtTime(0, AC.currentTime, .05); if (cityGain) cityGain.gain.setTargetAtTime(0, AC.currentTime, .15); } }
+  function engineOff(){ if (HS && AC) for (const g of [HS.trotGain, HS.walkGain, HS.creakGain]) g.gain.setTargetAtTime(0, AC.currentTime, .05);   /* the horse and the cart go quiet too */ if (engineGain && AC) { engineGain.gain.setTargetAtTime(0, AC.currentTime, .05); brakeGain.gain.setTargetAtTime(0, AC.currentTime, .05); if (roadGain) roadGain.gain.setTargetAtTime(0, AC.currentTime, .05); if (cityGain) cityGain.gain.setTargetAtTime(0, AC.currentTime, .15); } }
   function setPaused(p){ if (p === !!G.paused) return; G.paused = p; if (p) engineOff(); const live = G.mode === 'drive' || G.mode === 'fight'; if (live && !G.menu) { if (p) announce('ПАУЗА', '', 3600000, 'вернись в окно игры'); else $('announce').className = ''; } }
   function syncPause(){ setPaused(!!G.menu || document.hidden || !document.hasFocus()); }
   function openMenu(){ if (!(G.mode === 'drive' || G.mode === 'fight') || G.menu) return; G.menu = true; $('announce').className = ''; setPaused(true); $('startCard').hidden = true; $('overCard').hidden = true; $('menuCard').hidden = false; $('overlay').hidden = false; $('resumeBtn').focus(); }
@@ -2001,7 +2000,7 @@ const SQUEAL_B64 = 'SUQzBAAAAAAAIlRTU0UAAAAOAAADTGF2ZjYyLjMuMTAwAAAAAAAAAAAAAAD/
     G.crossTimer = 0; spawnCrossing(); G.crossTimer = 1e9;
     announce('ПОЛИГОН', '', 2000, 'ремонт, трейлер, авария, перекрёсток · O обзор мышью');
   }
-  $('polyBtn').addEventListener('click', startPolygon);
+
   $('startBtn').addEventListener('click', start); $('againBtn').addEventListener('click', start);
   let quality = 'low';   /* light graphics only: no shadows, no high-dpi rendering */
   function applyQuality(){ const low = quality === 'low', dpr = window.devicePixelRatio || 1; renderer.setPixelRatio(low ? Math.min(dpr, 1) : Math.min(dpr, 2)); renderer.shadowMap.enabled = !low; if (dir.shadow.map) { dir.shadow.map.dispose(); dir.shadow.map = null; } dir.shadow.mapSize.set(low ? 1024 : 2048, low ? 1024 : 2048); scene.traverse(o => { if (o.material) { const ms = Array.isArray(o.material) ? o.material : [o.material]; for (const mt of ms) mt.needsUpdate = true; } }); fscene.traverse(o => { if (o.material) { const ms = Array.isArray(o.material) ? o.material : [o.material]; for (const mt of ms) mt.needsUpdate = true; } }); $('menuGfx').textContent = low ? 'Графика: лёгкая' : 'Графика: обычная'; }   /* light: no shadows, no high-dpi rendering; enough for an old laptop or a phone */
@@ -2406,7 +2405,7 @@ const SQUEAL_B64 = 'SUQzBAAAAAAAIlRTU0UAAAAOAAADTGF2ZjYyLjMuMTAwAAAAAAAAAAAAAAD/
       const sh = G.shake*G.shake*.25, mid = (PF.x + EF.x)/2, spread = Math.abs(PF.x - EF.x);
       fcamPos.set(mid*.85 + (Math.random() - .5)*sh, 2.5 + (Math.random() - .5)*sh, 7 + spread*.45); fcam.position.lerp(fcamPos, Math.min(1, dt*5));
       fcamLook.set(mid*.85, 1.15, 0); fcam.lookAt(fcamLook); updatePlumes(dt);
-      if (cityGain) cityGain.gain.setTargetAtTime(.2, AC.currentTime, .3);
+      if (cityGain) cityGain.gain.setTargetAtTime(0, AC.currentTime, .3);   /* the menu is silent */
       if (engineGain) { engineGain.gain.setTargetAtTime(.14, AC.currentTime, .2); if (engine) engine.playbackRate.setTargetAtTime(.95, AC.currentTime, .3); brakeGain.gain.setTargetAtTime(0, AC.currentTime, .05); if (roadGain) roadGain.gain.setTargetAtTime(0, AC.currentTime, .1); }
       hudT += dt; if (hudT > .1) { hudT = 0; updateHud(); }
       renderer.render(fscene, fcam);

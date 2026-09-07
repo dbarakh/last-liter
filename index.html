@@ -3,121 +3,91 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Последний литр — гонка по вечернему городу на последнем литре бензина</title>
-<meta name="description" content="Браузерная гонка: доехать как можно дальше на почти пустом баке, влезть в очередь на заправку и отбить своё место у водителя. Без установки, на компьютере и телефоне.">
+<title>Последний литр</title>
+<meta name="description" content="Браузерная гонка по вечернему городу на последнем литре бензина. Играть без установки.">
 <meta property="og:title" content="Последний литр">
 <meta property="og:description" content="Гонка по вечернему городу на последнем литре бензина. Играть в браузере.">
 <meta property="og:image" content="assets/hero.jpg">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Ctext y=%27.9em%27 font-size=%2790%27%3E%E2%9B%BD%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Rubik+Mono+One&family=Rubik:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700;900&display=swap" rel="stylesheet">
 <style>
-  :root{--bg:#07050f;--bg2:#1b1440;--ink:#f7ead8;--ink-dim:rgba(247,234,216,.66);--accent:#ffb347;--danger:#ff5a4e;--p1:#2de2ff;--panel:rgba(20,12,38,.7);--line:rgba(255,179,71,.3);--display:'Rubik Mono One','Arial Black',Impact,sans-serif;--body:'Rubik','Helvetica Neue',Arial,sans-serif;}
-  *{box-sizing:border-box;} html{scroll-behavior:smooth;}
-  body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 var(--body);}
-  a{color:var(--accent);}
-  .wrap{width:min(1080px,92vw);margin:0 auto;}
-  header{position:sticky;top:0;z-index:5;background:rgba(7,5,15,.8);backdrop-filter:blur(8px);border-bottom:1px solid rgba(255,255,255,.06);}
-  header .wrap{display:flex;align-items:center;justify-content:space-between;padding:12px 0;gap:16px;}
-  .logo{font-family:var(--display);font-size:15px;letter-spacing:.04em;color:var(--ink);text-decoration:none;}
-  nav a{color:var(--ink-dim);text-decoration:none;margin-left:18px;font-size:14px;} nav a:hover{color:var(--ink);}
-  .btn{display:inline-block;background:var(--accent);color:#2b1608;text-decoration:none;font:700 15px var(--body);padding:13px 22px;border-radius:10px;box-shadow:0 6px 0 #a8641a;transition:transform .08s;}
-  .btn:active{transform:translateY(3px);box-shadow:0 3px 0 #a8641a;}
-  .btn.ghost{background:transparent;color:var(--ink);border:1px solid rgba(255,255,255,.22);box-shadow:none;}
-  .hero{position:relative;padding:56px 0 40px;background:radial-gradient(1200px 600px at 50% -10%,#3a1d5e 0%,var(--bg2) 40%,var(--bg) 100%);}
-  .hero .wrap{display:grid;grid-template-columns:1.05fr 1fr;gap:40px;align-items:center;}
-  .eyebrow{font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);margin:0 0 12px;}
-  h1{font-family:var(--display);font-weight:400;font-size:clamp(34px,5vw,58px);line-height:1.05;margin:0 0 16px;text-wrap:balance;}
-  .lead{font-size:18px;color:var(--ink-dim);margin:0 0 26px;max-width:46ch;}
-  .cta{display:flex;gap:12px;flex-wrap:wrap;align-items:center;}
-  .cta small{color:var(--ink-dim);font-size:13px;flex-basis:100%;}
-  .shot{display:block;width:100%;border-radius:14px;border:1px solid rgba(255,255,255,.1);box-shadow:0 30px 80px rgba(0,0,0,.55);background:#000;}
-  section{padding:56px 0;}
-  h2{font-family:var(--display);font-weight:400;font-size:clamp(22px,3vw,32px);margin:0 0 8px;}
-  .sub{color:var(--ink-dim);margin:0 0 28px;max-width:60ch;}
-  .steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px;counter-reset:s;}
-  .step{background:var(--panel);border:1px solid rgba(255,255,255,.08);border-top:3px solid var(--accent);border-radius:12px;padding:20px 20px 18px;}
-  .step::before{counter-increment:s;content:counter(s);display:inline-block;font-family:var(--display);color:var(--accent);font-size:22px;margin-bottom:8px;}
-  .step h3{margin:0 0 6px;font-size:17px;} .step p{margin:0;color:var(--ink-dim);font-size:15px;}
-  .gallery{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px;} .gallery.two{grid-template-columns:repeat(auto-fit,minmax(340px,1fr));}
-  figure{margin:0;} figure img{display:block;width:100%;border-radius:12px;border:1px solid rgba(255,255,255,.1);background:#000;aspect-ratio:16/9;object-fit:cover;}
-  figcaption{color:var(--ink-dim);font-size:14px;margin-top:8px;}
-  .rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;}
-  .rule{display:flex;gap:12px;align-items:flex-start;background:var(--panel);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px 16px;}
-  .rule i{flex:0 0 10px;width:10px;height:10px;border-radius:50%;margin-top:7px;background:var(--danger);} .rule.ok i{background:var(--p1);} .rule.warn i{background:var(--accent);}
-  .rule b{display:block;font-weight:500;} .rule span{color:var(--ink-dim);font-size:14px;}
-  .keys{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;}
-  .keys div{background:var(--panel);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:16px 18px;}
-  .keys h3{margin:0 0 10px;font-size:16px;} .keys p{margin:6px 0;color:var(--ink-dim);font-size:14px;}
-  kbd{font:500 12px/1 var(--body);background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);border-bottom-width:3px;border-radius:6px;padding:5px 8px;white-space:nowrap;color:var(--ink);}
-  .final{text-align:center;padding:64px 0 72px;background:radial-gradient(800px 400px at 50% 100%,#3a1d5e 0%,var(--bg) 70%);}
-  footer{border-top:1px solid rgba(255,255,255,.06);padding:22px 0;color:var(--ink-dim);font-size:13px;}
-  footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;}
-  @media (max-width:820px){ .hero .wrap{grid-template-columns:1fr;} .hero{padding:36px 0 30px;} nav{display:none;} }
+  :root{--ink:#f7ead8;--dim:rgba(247,234,216,.72);--accent:#ffb347;--bg:#1a1016;--panel:rgba(20,12,16,.62);--line:rgba(247,234,216,.18);}
+  *{box-sizing:border-box;}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:Rubik,system-ui,sans-serif;}
+  .screen{position:fixed;inset:0;display:flex;flex-direction:column;overflow:hidden;}
+  .screen[hidden]{display:none;}
+  /* ---- 1: the shot ---- */
+  #s1{background:#1a1016 url(assets/hero.jpg) center/cover no-repeat;justify-content:flex-end;}
+  #s1::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(20,10,14,.15) 0%,rgba(20,10,14,.05) 40%,rgba(20,10,14,.82) 100%);}
+  #s1 .in{position:relative;padding:0 clamp(20px,6vw,90px) clamp(28px,7vh,80px);max-width:900px;}
+  h1{margin:0 0 10px;font-weight:900;font-size:clamp(40px,8vw,104px);line-height:.95;letter-spacing:-.01em;text-shadow:0 4px 30px rgba(0,0,0,.6);}
+  .lead{margin:0 0 26px;font-size:clamp(16px,2.1vw,22px);line-height:1.45;color:var(--ink);max-width:620px;text-shadow:0 2px 14px rgba(0,0,0,.7);}
+  .btn{display:inline-block;background:var(--accent);color:#2b1608;font-weight:700;font-size:clamp(17px,2vw,22px);letter-spacing:.08em;text-transform:uppercase;padding:16px 38px;border-radius:999px;border:0;cursor:pointer;text-decoration:none;box-shadow:0 8px 30px rgba(0,0,0,.45);transition:transform .12s,box-shadow .12s;}
+  .btn:hover{transform:translateY(-2px);box-shadow:0 12px 34px rgba(0,0,0,.5);}
+  .btn:active{transform:translateY(0);}
+  /* ---- 2: the rules ---- */
+  #s2{background:#1a1016 url(assets/hero.jpg) center/cover no-repeat;}
+  #s2::before{content:"";position:absolute;inset:0;background:rgba(18,10,14,.86);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);}
+  #s2 .in{position:relative;flex:1;overflow:auto;padding:clamp(18px,4vh,40px) clamp(16px,5vw,70px) 0;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;}
+  #s2 .wrap{margin:auto;width:100%;max-width:1500px;}
+  #s2 h2{margin:0 0 4px;font-weight:900;font-size:clamp(26px,4vw,44px);line-height:1;}
+  #s2 .sub{margin:0 0 18px;color:var(--dim);font-size:clamp(14px,1.5vw,17px);}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:16px;}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;}
+  .card img{display:block;width:100%;aspect-ratio:16/9;object-fit:cover;}
+  .card .t{padding:12px 14px 14px;}
+  .card b{display:block;font-size:clamp(15px,1.6vw,18px);margin-bottom:4px;}
+  .card p{margin:0;color:var(--dim);font-size:clamp(13px,1.35vw,15px);line-height:1.45;}
+  .keys{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;padding:12px 14px 14px;font-size:clamp(13px,1.35vw,15px);color:var(--dim);}
+  .keys div b{display:inline;font-size:inherit;color:var(--ink);margin:0;}
+  kbd{display:inline-block;font:500 12px/1 Rubik,system-ui;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:3px 6px;margin:0 2px;color:var(--ink);background:rgba(0,0,0,.25);}
+  #s2 .bar{position:relative;padding:14px clamp(16px,5vw,70px) 16px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;background:linear-gradient(180deg,rgba(18,10,14,0),rgba(18,10,14,.9) 40%);}
+  .back{background:none;border:1px solid var(--line);color:var(--ink);border-radius:999px;padding:12px 20px;font:500 14px Rubik,system-ui;cursor:pointer;letter-spacing:.06em;text-transform:uppercase;}
+  .credits{position:relative;padding:0 clamp(16px,5vw,70px) 12px;font-size:11px;color:rgba(247,234,216,.45);line-height:1.5;}
+  .credits a{color:inherit;}
+  @media (max-width:640px){ .keys{grid-template-columns:1fr;} #s1 .in{padding-bottom:36px;} }
 </style>
 </head>
 <body>
-<header><div class="wrap"><a class="logo" href="#">ПОСЛЕДНИЙ ЛИТР</a><nav><a href="#how">Как играть</a><a href="#street">Что на улице</a><a href="#keys">Управление</a><a href="play.html">Играть</a></nav></div></header>
 
-<div class="hero"><div class="wrap">
-  <div>
-    <p class="eyebrow">Браузерная гонка · без установки</p>
+<section class="screen" id="s1">
+  <div class="in">
     <h1>Последний литр</h1>
-    <p class="lead">Вечер, бак почти пуст, впереди город. Задача одна: уехать как можно дальше. Заправки есть, но не на всех есть бензин, а где есть, там очередь на полквартала. Влезай, дерись за место, заправляйся и езжай дальше.</p>
-    <div class="cta"><a class="btn" href="play.html">Играть</a><a class="btn ghost" href="#how">Как играть</a><small>Работает в браузере на компьютере и телефоне. На телефоне кнопки на экране.</small></div>
+    <p class="lead">Вечер, бак почти пуст, впереди город. Уехать как можно дальше, влезть в очередь на заправку, отбиться от тех, кто в ней стоял, и снова в путь.</p>
+    <button class="btn" id="toRules" type="button">Играть</button>
   </div>
-  <a href="play.html"><img class="shot" src="assets/hero.jpg" alt="Шестёрка с холодильником на крыше едет по вечернему городу"></a>
-</div></div>
+</section>
 
-<section id="how"><div class="wrap">
-  <h2>Как играть</h2>
-  <p class="sub">Четыре вещи, которые надо знать до старта. Остальное поймёшь по дороге.</p>
-  <div class="steps">
-    <div class="step"><h3>Едешь, пока есть бензин</h3><p>В баке топлива на три минуты холостого хода. Панель показывает, на сколько километров хватит при твоей манере езды.</p></div>
-    <div class="step"><h3>Разгон жрёт больше всего</h3><p>Каждое торможение и новый разгон стоят дороже ровной езды. Не теряй скорость и не врезайся.</p></div>
-    <div class="step"><h3>Ищешь заправку</h3><p>Бензин есть не везде: смотри на табло. Где есть, там очередь. В хвост честно, но долго.</p></div>
-    <div class="step"><h3>Влезаешь и дерёшься</h3><p>Коснись любой машины в очереди, её водитель выйдет разбираться. Победил, место твоё. Проиграл, тебя выкинут на дорогу. Чем дальше заехал, тем злее водители.</p></div>
+<section class="screen" id="s2" hidden>
+  <div class="in"><div class="wrap">
+    <h2>Правила</h2>
+    <p class="sub">Пять вещей, которые надо знать до старта. Остальное поймёшь по дороге.</p>
+    <div class="grid">
+      <div class="card"><img src="assets/station.jpg" alt="Очередь на заправке"><div class="t"><b>Бензин</b><p>Топлива на три минуты. Заправки есть не везде, а где есть, там очередь. Любое касание машины в очереди, и её водитель выходит разбираться.</p></div></div>
+      <div class="card"><img src="assets/fight.jpg" alt="Драка за место в очереди"><div class="t"><b>Драка</b><p>Серии ударов руками и ногами, пока противник не поставил блок. Победил, место твоё. Проиграл, тебя выкинут на дорогу. Чем дальше заехал, тем злее водители.</p></div></div>
+      <div class="card"><img src="assets/works.jpg" alt="Ремонт дороги и рабочие с лопатами"><div class="t"><b>Дорога</b><p>Ямы, снятый асфальт, открытые люки за конусами. У рабочих лопаты: подъедешь близко, лопата прилетит в лобовое. Столбики, лавки и урны только искрят, машины и остановки бьют по кузову.</p></div></div>
+      <div class="card"><img src="assets/cart.jpg" alt="Телега и машина на хвосте"><div class="t"><b>Телега</b><p>На лошади бензин не нужен, зато сзади постоянно поджимают. Сел на хвост, гудит, через пару секунд давит на газ. Уходи из полосы. Жизнь одна.</p></div></div>
+      <div class="card"><div class="t"><b>Управление</b></div><div class="keys">
+        <div><b>Авто и телега</b><br><kbd>↑</kbd> газ · <kbd>↓</kbd> тормоз<br><kbd>←</kbd><kbd>→</kbd> руль · <kbd>V</kbd> вид · <kbd>Esc</kbd> меню</div>
+        <div><b>Драка</b><br><kbd>←</kbd><kbd>→</kbd> шаг · <kbd>Space</kbd> прыжок<br><kbd>J</kbd> удар · <kbd>K</kbd> пинок · <kbd>L</kbd> блок</div>
+      </div></div>
+    </div>
+    <p class="credits">Звуки: визг шин Tom Haigh (audible-edge), OpenGameArt.org, CC-BY 3.0 · шум дороги orlandorizo, Freesound, CC0 · мотор Iridiuss, Freesound, CC0 · шум города IgnasD, OpenGameArt, CC0 · лошадь и копыта Joseph Sardin, BigSoundBank, CC0 · клаксоны DeVern и wanaki, Freesound, CC0 · телега craigsmith, Freesound, CC0 · удары Sadiquecat, Freesound, CC0 · <a href="https://github.com/dbarakh/last-liter">код на GitHub</a></p>
+  </div></div>
+  <div class="bar">
+    <button class="back" id="toShot" type="button">← Назад</button>
+    <a class="btn" href="play.html">Играть</a>
   </div>
-</div></section>
+</section>
 
-<section id="street"><div class="wrap">
-  <h2>Заправка и драка</h2>
-  <p class="sub">Две вещи, вокруг которых крутится игра.</p>
-  <div class="gallery two">
-    <figure><img src="assets/station.jpg" alt="Очередь на заправку"><figcaption>Заправка с очередью. Табло говорит, есть ли бензин. Любое касание машины в очереди начинает драку за место.</figcaption></figure>
-    <figure><img src="assets/fight.jpg" alt="Драка с водителем"><figcaption>Драка: серии ударов руками и ногами, пока противник не поставит блок. Удар в прыжке бьёт сильнее.</figcaption></figure>
-  </div>
-  <h2 style="margin-top:40px">Что можно задеть</h2>
-  <p class="sub">Почти всё в городе можно зацепить, но не всё одинаково больно.</p>
-  <div class="rules">
-    <div class="rule"><i></i><div><b>Машина, коляска, остановка</b><span>Полная остановка и ступень урона кузову. Десять ступеней, и шестёрка разваливается.</span></div></div>
-    <div class="rule warn"><i></i><div><b>Самокатчик, велосипедист</b><span>Ступень урона, скорость почти не теряешь. За сбитый самокат капает немного бензина.</span></div></div>
-    <div class="rule ok"><i></i><div><b>Столбы, деревья, урны, лавочки, столбики</b><span>Только искры и грохот, машина не замечает.</span></div></div>
-    <div class="rule warn"><i></i><div><b>Открытый люк</b><span>Урон. Перед открытыми люками всегда стоят конусы, закрытые безвредны.</span></div></div>
-    <div class="rule ok"><i></i><div><b>Ямы и снятый асфальт</b><span>Только трясёт. Бывают участки в триста метров сплошных ям.</span></div></div>
-    <div class="rule ok"><i></i><div><b>Трейлер с аппарелью</b><span>Это трамплин. Разгонись и прыгай, за ним всегда чисто.</span></div></div>
-  </div>
-</div></section>
-
-<section id="keys"><div class="wrap">
-  <h2>Управление</h2>
-  <p class="sub">На телефоне те же действия на экранных кнопках.</p>
-  <div class="keys">
-    <div><h3>Авто</h3><p><kbd>↑</kbd> газ · <kbd>↓</kbd> тормоз, стоя на месте чуть назад</p><p><kbd>←</kbd> <kbd>→</kbd> руль</p><p><kbd>V</kbd> вид сзади или из кабины · <kbd>Esc</kbd> меню</p></div>
-    <div><h3>Телега</h3><p><kbd>↑</kbd> подстегнуть лошадь, и почаще</p><p><kbd>↓</kbd> тормоз · <kbd>←</kbd> <kbd>→</kbd> руль</p><p>Топливо не нужно</p></div>
-    <div><h3>Драка</h3><p><kbd>←</kbd> <kbd>→</kbd> шаг · <kbd>Space</kbd> прыжок</p><p><kbd>J</kbd> удар · <kbd>K</kbd> пинок · <kbd>L</kbd> блок</p><p>После попавшего удара можно сразу бить следующий</p></div>
-  </div>
-</div></section>
-
-<div class="final"><div class="wrap">
-  <h2>Бак почти пуст</h2>
-  <p class="sub" style="margin:0 auto 24px">Заводи и посмотри, докуда доедешь.</p>
-  <a class="btn" href="play.html">Играть</a>
-</div></div>
-
-<footer><div class="wrap">
-  <span>Звуки: визг шин Tom Haigh (audible-edge), OpenGameArt.org, CC-BY 3.0 · шум дороги orlandorizo, Freesound, CC0 · мотор Iridiuss, Freesound, CC0 · шум города IgnasD, OpenGameArt, CC0 · лошадь и копыта Joseph Sardin, BigSoundBank, CC0 · клаксоны DeVern и wanaki, Freesound, CC0 · телега craigsmith, Freesound, CC0 · удары Sadiquecat, Freesound, CC0</span>
-  <a href="https://github.com/dbarakh/last-liter">Код на GitHub</a>
-</div></footer>
+<script>
+  const s1 = document.getElementById('s1'), s2 = document.getElementById('s2');
+  const show = rules => { s1.hidden = rules; s2.hidden = !rules; if (rules) s2.querySelector('.in').scrollTop = 0; history.replaceState(null, '', rules ? '#rules' : location.pathname); };
+  document.getElementById('toRules').addEventListener('click', () => show(true));
+  document.getElementById('toShot').addEventListener('click', () => show(false));
+  if (location.hash === '#rules') show(true);
+</script>
 </body>
 </html>
