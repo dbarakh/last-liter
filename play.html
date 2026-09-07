@@ -2167,11 +2167,11 @@ const SQUEAL_B64 = 'SUQzBAAAAAAAIlRTU0UAAAAOAAADTGF2ZjYyLjMuMTAwAAAAAAAAAAAAAAD/
         G.slideV += (Math.sin(G.head + G.yawExtra*.8)*Math.abs(G.speed) - G.slideV)*Math.min(1, dt*settle);
         G.x += G.slideV*dt;
         G.hitCool = Math.max(0, G.hitCool - dt); G.eventTimer -= dt;
-        G.chaseDue = (G.chaseDue === undefined ? (CAR.cart ? rand(3, 5) : rand(6, 12)) : G.chaseDue - dt);
-        if (G.chaseDue <= 0 && !obstacles.some(o => o.chaser) && !G.st && !G.fork && G.speed > -.5) { G.chaseDue = CAR.cart ? rand(1.5, 3) : rand(14, 26)*Math.max(.35, 1 - G.dist/5000);   /* on the cart they come one after another */   /* the further you get, the more of them */   /* somebody in a hurry: a car comes up fast from behind, a second of horn and flashing lights, then it is past. Or into you. */
+        G.chaseDue = (G.chaseDue === undefined ? (CAR.cart ? rand(2, 3) : rand(6, 12)) : G.chaseDue - dt);
+        if (G.chaseDue <= 0 && !obstacles.some(o => o.chaser && o.phase !== 'go') && !G.st && !G.fork && G.speed > -.5) {   /* the next one is already coming while this one floors it */ G.chaseDue = CAR.cart ? rand(.4, 1.2) : rand(14, 26)*Math.max(.35, 1 - G.dist/5000);   /* on the cart they come one after another */   /* the further you get, the more of them */   /* somebody in a hurry: a car comes up fast from behind, a second of horn and flashing lights, then it is past. Or into you. */
           const lane = LANES.reduce((b, l) => Math.abs(l - G.x) < Math.abs(b - G.x) ? l : b, LANES[0]);
           const cm = makeCar(pick(trafficColors), false); world.add(cm); const beam = new THREE.Mesh(new THREE.PlaneGeometry(3.4, 46), new THREE.MeshBasicMaterial({color:col(0xfff4d0), transparent:true, opacity:.2, blending:THREE.AdditiveBlending, depthWrite:false})); beam.rotation.x = -Math.PI/2; beam.visible = false; world.add(beam);
-          obstacles.push({mesh:cm, kind:'car', chaser:true, beam, warned:false, speed:Math.max(24, Math.abs(G.speed) + 20), base:Math.max(24, Math.abs(G.speed) + 20), halfL:cm.userData.halfL, halfW:.98, dist:-75, lat:lane, yaw:0}); }
+          obstacles.push({mesh:cm, kind:'car', chaser:true, beam, warned:false, speed:Math.max(24, Math.abs(G.speed) + 20), base:Math.max(24, Math.abs(G.speed) + 20), halfL:cm.userData.halfL, halfW:.98, dist:CAR.cart ? -45 : -75, lat:lane, yaw:0}); }
         if (!G.fork && !G.st && G.eventTimer <= 0 && !crossings.some(c => c.dist > 80) && !(G.dist < (G.ruinUntil || 0) + 80)) spawnFork();   /* no station in the middle of the holes */
         { const set = biomeAt(G.dist + 190) === 'steppe' ? [-2.6, 2.6, -2.6] : [-4, 0, 4]; LANES[0] = set[0]; LANES[1] = set[1]; LANES[2] = set[2]; }
         farCity.visible = biomeAt(G.dist) === 'city'; farMount.visible = biomeAt(G.dist) === 'forest';
