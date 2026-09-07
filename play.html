@@ -313,16 +313,16 @@
     const panel = (pts, s) => { const sh = new THREE.Shape(); pts.forEach((pt, i) => { if (pt.arc) sh.absarc(pt.arc[0], pt.arc[1], pt.arc[2], pt.arc[3], pt.arc[4], pt.arc[5]); else i ? sh.lineTo(pt[0], pt[1]) : sh.moveTo(pt[0], pt[1]); }); sh.closePath();
       const m = new THREE.Mesh(new THREE.ExtrudeGeometry(sh, {depth:.3, bevelEnabled:false, curveSegments:40}), paint); m.rotation.y = Math.PI/2; m.position.x = s > 0 ? W/2 - .32 : -W/2 + .02; m.castShadow = true; m.userData.part = 'frame'; g.add(m); return m; };
     for (let s of [-1, 1]) {
-      panel([[2.1, SILL], [1.57, SILL], {arc:[1.21, SILL, .36, 0, Math.PI, false]}, [.85, SILL], [.86, SILL], [.86, BELT], [2.1, BELT]], s);            // front wing (shape x = -z)
-      panel([[-.86, SILL], [-.85, SILL], {arc:[-1.21, SILL, .36, 0, Math.PI, false]}, [-1.57, SILL], [-2.1, SILL], [-2.1, BELT], [-.86, BELT]], s);   // rear quarter
+      panel([[2.1, .26], [1.615, .26], {arc:[1.21, .37, .42, -.265, Math.PI + .265, false]}, [.805, .26], [.86, .26], [.86, BELT], [2.1, BELT]], s);            // front wing (shape x = -z)
+      panel([[-.86, .26], [-.805, .26], {arc:[-1.21, .37, .42, -.265, Math.PI + .265, false]}, [-1.615, .26], [-2.1, .26], [-2.1, BELT], [-.86, BELT]], s);   // rear quarter
       box(.12, .55, 1.0, dark, s*.5, .45, -1.21); box(.12, .55, 1.0, dark, s*.5, .45, 1.21);                                                       // dark wheel wells
-      box(.06, .12, 1.6, black, s*(W/2 - .02), SILL + .02, 0);                            // black sill
+      box(.06, .06, 1.6, black, s*(W/2 - .02), .24, 0);                            // black sill
       box(.02, .04, 4.0, chrome, s*(W/2 + .005), BELT - .02, 0);                          // belt-line chrome strip
       box(.05, .06, .12, orange, s*(W/2 + .01), BELT - .16, -1.75);                        // side repeater
     }
     box(W - .34, .1, .2, paint, 0, BELT - .07, -.78); box(W - .34, .5, .06, dark, 0, .65, -.82);   // cowl, firewall
     box(W - .34, .5, .06, dark, 0, .64, 1.0);                                                     // boot bulkhead
-    box(W - .2, BELT - SILL - .02, .08, black, 0, (BELT + SILL)/2, 2.07);                          // black rear panel
+    box(W - .2, BELT - .26 - .02, .08, black, 0, (BELT + .26)/2, 2.07);                          // black rear panel
     box(W + .06, .13, .12, chrome, 0, .46, 2.1); for (let s of [-1, 1]) box(.16, .2, .14, black, s*(W/2 - .1), .46, 2.1);   // rear chrome bumper + overriders
     cyl(.035, .035, .3, dark, -.5, .32, 2.12, Math.PI/2);                                          // exhaust
     box(W - .3, .03, .02, chrome, 0, BELT + .01, 2.1);
@@ -363,8 +363,8 @@
       fb(.62, .58, 1.3, enamel, 0, .29, 0); fb(.56, .02, 1.18, std(0xe4e0d6, {roughness:.4}), 0, .585, 0); fb(.03, .04, .5, chrome, .2, .6, -.27); fb(.2, .015, .05, chrome, -.1, .595, .53); fb(.6, .04, .06, black, 0, .04, .65); }
     // ---- doors (front) with chrome handles and mirrors; rear doors separately
     part = 'doors';
-    for (let s of [-1, 1]) { const x = s*(W/2 - .03); box(.06, BELT - SILL - .04, .98, paint, x, (BELT + SILL)/2, -.37); box(.03, .04, .14, chrome, s*(W/2 + .01), BELT - .2, -.05); box(.22, .03, .03, chrome, s*(W/2 + .08), BELT - .04, -.72); box(.03, .12, .03, chrome, s*(W/2 + .17), BELT + .01, -.72); box(.17, .11, .04, chrome, s*(W/2 + .17), BELT + .1, -.72); box(.15, .09, .01, std(0xbfd3e0, {roughness:.1, metalness:.8}), s*(W/2 + .17), BELT + .1, -.695); }
-    part = 'doorsR'; for (let s of [-1, 1]) { box(.06, BELT - SILL - .04, .92, paint, s*(W/2 - .03), (BELT + SILL)/2, .62); box(.03, .04, .14, chrome, s*(W/2 + .01), BELT - .2, .9); }
+    for (let s of [-1, 1]) { const x = s*(W/2 - .03); box(.06, BELT - .26 - .04, .98, paint, x, (BELT + .26)/2, -.37); box(.03, .04, .14, chrome, s*(W/2 + .01), BELT - .2, -.05); box(.22, .03, .03, chrome, s*(W/2 + .08), BELT - .04, -.72); box(.03, .12, .03, chrome, s*(W/2 + .17), BELT + .01, -.72); box(.17, .11, .04, chrome, s*(W/2 + .17), BELT + .1, -.72); box(.15, .09, .01, std(0xbfd3e0, {roughness:.1, metalness:.8}), s*(W/2 + .17), BELT + .1, -.695); }
+    part = 'doorsR'; for (let s of [-1, 1]) { box(.06, BELT - .26 - .04, .92, paint, s*(W/2 - .03), (BELT + .26)/2, .62); box(.03, .04, .14, chrome, s*(W/2 + .01), BELT - .2, .9); }
     // ---- tail lamps: tall three-section clusters in the corners of the black panel
     part = 'lamps';
     for (let s of [-1, 1]) { box(.4, .26, .03, black, s*.55, .74, 2.1); box(.12, .22, .04, orange, s*.55 + s*.13, .74, 2.115); box(.12, .22, .04, tail, s*.55, .74, 2.115); box(.12, .22, .04, rev, s*.55 - s*.13, .74, 2.115); }
@@ -2159,6 +2159,7 @@
       // ground under the car: the road, or the ramp/deck of a transporter you drove onto
       { let gh = 0, slope = 0;
         let roofNow = false; if (CAR.over || G.py > .8 || G.onRoof) for (const o of obstacles) { if (o.kind !== 'car' || o.bus || o.dead || o.halfL > 3 || o.roller || Math.abs(o.lat - G.x) > o.halfW + 1.0 || Math.abs(o.dist) > o.halfL + 1.6) continue; const top = 1.45*o.mesh.scale.y, tt = Math.max(0, Math.min(1, (o.halfL + 1.6 - Math.abs(o.dist))/(CAR.over ? 1.8 : .8))), sm = tt*tt*(3 - 2*tt); gh = Math.max(gh, top*sm); if (top*sm > .4) roofNow = true; if (!CAR.over) continue; if (o.crushed && o.mesh.scale.y > .63) o.mesh.scale.y += (.62 - o.mesh.scale.y)*Math.min(1, dt*5); if (!o.crushed && Math.abs(o.dist) < o.halfL + .6) { o.crushed = true; sfx.crash(); G.shake = Math.max(G.shake, .5); G.rollV += (Math.random() < .5 ? -1 : 1)*1.5; for (let q = 0; q < 14; q++) chunk(.06, .06, .06, sparkMat, o.lat - G.x + rand(-.9, .9), .6, -o.dist + rand(-1.5, 1.5), new THREE.Vector3(rand(-6, 6), rand(2, 6), rand(2, 9))); } }
+        { const cj = crossings.find(c => Math.abs(c.dist) < c.half + 5); if (cj) { const tt = Math.max(0, Math.min(1, (cj.half + 5 - Math.abs(cj.dist))/2)); gh = Math.max(gh, .1*tt*(3 - 2*tt)*tt); } }   /* the junction plate and its fillets are 10 cm proud of the street: ride on them */
         G.onRoof = roofNow;   /* from a jump you land on roofs and drive along them; on the ground a car is still a wall */
         if (roofNow && !CAR.over && G.mode === 'drive' && Math.abs(G.speed) > 2) { G.shake = Math.max(G.shake, .32); G.rumble = Math.max(G.rumble || 0, .06); if (Math.random() < dt*14) { G.rollV += (Math.random() < .5 ? -1 : 1)*1.4; G.pitch += rand(-.02, .02); if (Math.random() < .35) sfx.knock(); } for (let q = 0; q < 3; q++) chunk(.06, .06, .06, sparkMat, (Math.random() < .5 ? -1 : 1)*.85 + rand(-.1, .1), .35, rand(-1.4, 1.4), new THREE.Vector3(rand(-7, 7), rand(2, 7), rand(3, 10))); }   /* roofs are not a road: the car bangs from one to the next, rolls, and throws sparks from under the wheels */
         G.rampGrace = Math.max(0, (G.rampGrace || 0) - dt);
@@ -2274,7 +2275,7 @@
         o.dist -= (G.speed - (m === 'drive' ? o.speed : 0))*dt;
         if (o.kind === 'cross') { o.lat += o.vx*dt; if (Math.abs(o.lat) > 70) { world.remove(om); obstacles.splice(i, 1); continue; } }
         if (o.dist + o.halfL < -16 || o.dist > 300) { world.remove(om); obstacles.splice(i, 1); continue; }
-        if (o.kind === 'milled') { updateMilled(o); updateWorkers(o, dt); } else place(om, o.dist, o.lat, o.yaw);
+        if (o.kind === 'milled') { updateMilled(o); updateWorkers(o, dt); } else { if (o.kind === 'car') om.userData.y0 = crossings.some(c => Math.abs(o.dist - c.dist) < c.half + 3) ? .1 : 0; place(om, o.dist, o.lat, o.yaw); }   /* traffic rides on the junction plate too */
         if (o.wreck) o.hz.emissiveIntensity = (Math.floor(G.time*1.7) % 2) ? 2.4 : .15;
         if (o.bike && om.userData.thighs) { o.ph = (o.ph || 0) + o.speed*dt*2.6; for (let q = 0; q < 2; q++) { const a = o.ph + q*Math.PI; om.userData.thighs[q].rotation.x = 1.15 - Math.sin(a)*.42; om.userData.shins[q].rotation.x = -.95 + Math.sin(a)*.5 - Math.cos(a)*.15; } }
         if (o.dead) { o.t += dt; o.dy += dt*9 - o.t*o.t*1.2; om.position.y += Math.max(0, o.dy); om.rotation.x += o.t*4; if (o.t > 1.2) { world.remove(om); obstacles.splice(i, 1); } continue; }
