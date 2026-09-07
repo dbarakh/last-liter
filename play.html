@@ -723,7 +723,7 @@
       const pos = r.m.geometry.attributes.position.array, width = Math.abs(r.l1 - r.l0);
       const ground = !!r.ground, wire = r.yOff > 1, road = !ground && !wire && r.yOff === 0, pave = r.sideTag !== 0 && width > 1, kerb = r.yOff === .12, edge = r.sideTag !== 0 && width < .5;
       const cut = st && r.sideTag === st.side, U = cut ? st.group.userData : null;
-      const cLo = cut ? ((pave && !r.bike) ? st.dist - U.tail + 26 : st.dist - U.tail - 6) : 0, cHi = cut ? ((pave && !r.bike) ? st.dist - U.front - 24 : st.dist - U.front + 6) : 0;   /* the bike path is gone from taper to taper: nothing red at the exit */
+      const cLo = cut ? ((pave && !r.bike) ? st.dist - U.tail + 26 : st.dist - U.tail - 4) : 0,   /* the bike path, kerb and edge line run right up to where the apron's taper begins */ cHi = cut ? ((pave && !r.bike) ? st.dist - U.front - 24 : st.dist - U.front + 6) : 0;   /* the bike path is gone from taper to taper: nothing red at the exit */
       const colArr = ground ? r.m.geometry.attributes.color.array : null;
       for (let i = 0; i < n; i++) {
         const c = Math.cos(T.sth[i]), sn = Math.sin(T.sth[i]), k = i*6, d = T.dMin + i*T.ds, S = d + g0;
