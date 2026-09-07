@@ -47,7 +47,7 @@
 <script>
   const LB_URL = 'https://hflezrtvwasxiexjhvjh.supabase.co', LB_KEY = 'sb_publishable_kmCZJfe36vH7-fKh45jPIQ_Rg9HYieY';
   const list = document.getElementById('list'), sub = document.getElementById('sub');
-  const fmtDate = s => { const d = new Date(s); return isNaN(d) ? '' : d.toLocaleDateString('ru-RU', {day:'numeric', month:'short'}); };
+  const fmtDate = s => { const d = new Date(s); return isNaN(d) ? '' : d.toLocaleDateString('ru-RU', {day:'numeric', month:'short'}) + ', ' + d.toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'}); };
   const load = v => {
     sub.textContent = 'загружаю…'; list.innerHTML = '';
     const q = 'scores?select=name,km,vehicle,created_at&order=km.desc&limit=200' + (v ? '&vehicle=eq.' + v : '');

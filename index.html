@@ -50,7 +50,7 @@
   #top{position:absolute;right:clamp(20px,5vw,90px);top:50%;transform:translateY(-50%);width:min(420px,36vw);background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px 20px 16px;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);box-shadow:0 20px 60px rgba(0,0,0,.35);}
   #top .all{display:block;margin-top:10px;text-align:right;color:var(--accent);text-decoration:none;font-size:13px;letter-spacing:.04em;}
   #top h3{margin:0 0 10px;font-size:14px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);font-weight:500;}
-  #top ol{list-style:none;margin:0;padding:0;font-size:clamp(14px,1.2vw,17px);} #top li{display:grid;grid-template-columns:28px 1fr auto auto;gap:10px;align-items:center;padding:6px 8px;border-radius:8px;min-height:34px;} #top li:nth-child(odd){background:rgba(255,255,255,.04);} #top li span:first-child{color:var(--dim);font-weight:700;} #top li b{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;} #top li.empty b{color:rgba(247,234,216,.28);} #top li i{font-style:normal;color:var(--dim);font-size:.85em;} #top li em{font-style:normal;color:var(--accent);font-weight:700;font-variant-numeric:tabular-nums;} #top li:first-child span:first-child{color:var(--accent);}
+  #top ol{list-style:none;margin:0;padding:0;font-size:clamp(14px,1.2vw,17px);} #top li{display:grid;grid-template-columns:28px 1fr auto auto auto;gap:10px;align-items:center;padding:6px 8px;border-radius:8px;min-height:34px;} #top li:nth-child(odd){background:rgba(255,255,255,.04);} #top li span:first-child{color:var(--dim);font-weight:700;} #top li b{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;} #top li.empty b{color:rgba(247,234,216,.28);} #top li i{font-style:normal;color:var(--dim);font-size:.85em;} #top li small{color:rgba(247,234,216,.4);font-size:.75em;font-variant-numeric:tabular-nums;} #top li em{font-style:normal;color:var(--accent);font-weight:700;font-variant-numeric:tabular-nums;} #top li:first-child span:first-child{color:var(--accent);}
   @media (max-width:900px){ #s1{overflow:auto;justify-content:flex-start;} #s1 .in{padding-top:clamp(120px,32vh,300px);} #top{position:relative;transform:none;width:auto;margin:0 clamp(16px,5vw,60px) 30px;} }
   @media (max-width:640px){ .keys{grid-template-columns:1fr;} #s1 .in{padding-bottom:36px;} #top{margin-top:16px;padding:10px 12px;} #top li{font-size:13px;} }
 </style>
@@ -86,7 +86,7 @@
   </div></div>
   <div class="bar">
     <button class="back" id="toShot" type="button">← Назад</button>
-    <a class="btn" href="play.html?v=e006b3d5">Играть</a>
+    <a class="btn" href="play.html?v=f2975c20">Играть</a>
   </div>
 </section>
 
@@ -99,9 +99,9 @@
   // the leaderboard: the same public table the game writes to; ten rows always, empty ones as dashes
   const LB_URL = 'https://hflezrtvwasxiexjhvjh.supabase.co', LB_KEY = 'sb_publishable_kmCZJfe36vH7-fKh45jPIQ_Rg9HYieY';
   const topList = document.getElementById('topList');
-  const renderTop = rows => { topList.innerHTML = ''; for (let i = 0; i < 10; i++) { const r = rows[i], li = document.createElement('li'); if (r) { li.innerHTML = '<span>' + (i + 1) + '</span><b></b><i>' + (r.vehicle === 'cart' ? 'телега' : 'авто') + '</i><em>' + (+r.km).toFixed(2) + ' км</em>'; li.querySelector('b').textContent = r.name; } else { li.className = 'empty'; li.innerHTML = '<span>' + (i + 1) + '</span><b>свободно</b><i></i><em></em>'; } topList.appendChild(li); } };
+  const renderTop = rows => { topList.innerHTML = ''; for (let i = 0; i < 10; i++) { const r = rows[i], li = document.createElement('li'); if (r) { const d = new Date(r.created_at), ds = isNaN(d) ? '' : d.toLocaleDateString('ru-RU', {day:'numeric', month:'short'}) + ' ' + d.toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'}); li.innerHTML = '<span>' + (i + 1) + '</span><b></b><i>' + (r.vehicle === 'cart' ? 'телега' : 'авто') + '</i><small>' + ds + '</small><em>' + (+r.km).toFixed(2) + ' км</em>'; li.querySelector('b').textContent = r.name; } else { li.className = 'empty'; li.innerHTML = '<span>' + (i + 1) + '</span><b>свободно</b><i></i><small></small><em></em>'; } topList.appendChild(li); } };
   renderTop([]);
-  fetch(LB_URL + '/rest/v1/scores?select=name,km,vehicle&order=km.desc&limit=10', {headers:{apikey:LB_KEY, Authorization:'Bearer ' + LB_KEY}}).then(r => r.ok ? r.json() : Promise.reject()).then(renderTop).catch(() => {});
+  fetch(LB_URL + '/rest/v1/scores?select=name,km,vehicle,created_at&order=km.desc&limit=10', {headers:{apikey:LB_KEY, Authorization:'Bearer ' + LB_KEY}}).then(r => r.ok ? r.json() : Promise.reject()).then(renderTop).catch(() => {});
 </script>
 </body>
 </html>
