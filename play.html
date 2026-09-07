@@ -45,7 +45,7 @@
   #rep{display:flex;gap:4px;justify-content:flex-end;}
   #rep i{width:10px;height:10px;border:2px solid var(--ink-dim);transform:rotate(45deg);}
   #rep i.on{background:var(--danger);border-color:var(--danger);box-shadow:0 0 8px var(--danger);}
-  #dmg{display:flex;gap:3px;justify-content:flex-end;} #dmg i{width:9px;height:8px;border:2px solid var(--fuel-ok);border-radius:2px;} #dmg i.off{border-color:rgba(247,234,216,.25);background:rgba(255,90,78,.35);}
+  #dmg{display:flex;gap:3px;justify-content:flex-end;} #dmg.one i:not(:first-child){display:none;} #dmg i{width:9px;height:8px;border:2px solid var(--fuel-ok);border-radius:2px;} #dmg i.off{border-color:rgba(247,234,216,.25);background:rgba(255,90,78,.35);}
 
   #announce{grid-row:2;grid-column:1/-1;align-self:center;justify-self:center;text-align:center;font-family:var(--display);font-size:clamp(28px,7vw,72px);
             letter-spacing:.03em;text-shadow:0 0 30px rgba(255,179,71,.5),0 4px 0 rgba(0,0,0,.5);opacity:0;transform:scale(.7);transition:opacity .15s,transform .15s cubic-bezier(.2,1.6,.4,1);}
@@ -1513,7 +1513,7 @@
 
   function start(){
     audioInit(); clearObstacles(true); removeStation(); removeFork(); clearWreck(); clearCrossings(); TRACK.zones.length = 0; TRACK.turns.length = 0; G.turnOffer = null; G.turnHold = 0;
-    G.menu = false; $('menuCard').hidden = true; CAR = CARS[startCar] || CARS.lada; MAX_SPEED = CAR.vmax/3.6;
+    G.menu = false; $('menuCard').hidden = true; CAR = CARS[startCar] || CARS.lada; MAX_SPEED = CAR.vmax/3.6; $('dmg').classList.toggle('one', !!CAR.cart);
     scene.remove(player); player = makeSantaFe(); scene.add(player); dir.target = player; if (G.fp) setView(true); $('fuelBox').style.display = CAR.cart ? 'none' : '';   /* a horse has no tank */
     fscene.remove(fPlayerCar); fPlayerCar = makeSantaFe(); fPlayerCar.rotation.y = Math.PI/2; fPlayerCar.position.set(-11, 0, -4.5); fscene.add(fPlayerCar);
     Object.assign(G, {mode:'drive', damage:0, ruinUntil:0, ruinCool:0, ruinFree:0, crossTimer:12, busTimer:10, steerS:0, onMilled:false, milledNow:false, roadDrop:0, rumble:0, frX:0, frV:0, frZ:0, frW:0, frUy:0, frVy:0, prevPvy:0, prevSlide:0, empty:false, sink:0, sinkY:0, roll:0, rollV:0, head:0, skid:0, yawExtra:0, slideV:0, puffT:0, rate:RATE_IDLE, fuel:START_FUEL, fills:0, fights:0, rep:0, time:0, dist:0, speed:0, x:0, slideTo:null, py:0, pvy:0, shake:0, hitCool:0, bumpCool:0, eventTimer:4, nextRowAt:40, paused:false, smokeT:0});
@@ -1572,6 +1572,7 @@
     if (G.mode !== 'drive') return;
     const s0 = Math.abs(G.speed);
     if (CAR.hits2) { G.hitParity = !G.hitParity; if (G.hitParity) { G.speed = speedKeep ? G.speed*speedKeep : Math.min(G.speed, 4); G.shake = .8; sfx.crash(); flash('.4'); crashDebris(Math.max(1, G.damage)); return; } }   /* a tough truck: only every second hit costs a stage, twenty hits to the end */
+    if (CAR.cart) G.damage = 9;   /* the cart has one life: any hit is the end of it */
     G.damage = Math.min(10, G.damage + 1); G.speed = speedKeep ? G.speed*speedKeep : Math.min(G.speed, 4); G.shake = 1; sfx.crash(); flash('.5'); updateDmgHud();
     const d = G.damage;
     crashDebris(d);
@@ -2123,7 +2124,7 @@
       if (m === 'drive') {
         const turning = roundabouts.some(rb => G.dist > rb.s0 - 8 && G.dist < rbEndS(rb) + 3);
         if (turning && G.speed > 8.5) G.speed = Math.max(8.5, G.speed - 12*dt);
-        if (CAR.cart) { const target = held.up ? MAX_SPEED : 0; if (held.down) G.speed = Math.max(-1.5, G.speed - (G.speed > 0 ? 6 : 2)*dt); else if (G.speed < target) G.speed = Math.min(target, G.speed + 2.6*dt); else G.speed = Math.max(target, G.speed - 1.4*dt); G.whipDue = (G.whipDue || 0) - dt; if (held.up && G.speed < MAX_SPEED - .3 && G.whipDue <= 0) { G.whipDue = .9 + Math.random()*.5; whip(); } }   /* the horse drives like a car: hold the arrow and the driver does the whipping himself */
+        if (CAR.cart) { const target = held.up ? MAX_SPEED : 0; if (held.down) G.speed = Math.max(-1.5, G.speed - (G.speed > 0 ? 6 : 2)*dt); else if (G.speed < target) G.speed = Math.min(target, G.speed + 2.6*dt); else G.speed = Math.max(target, G.speed - 1.4*dt); G.whipDue = (G.whipDue || 0) - dt; if ((held.up || G.speed > 2) && G.whipDue <= 0) { G.whipDue = .7 + Math.random()*.4; whip(); } }   /* the horse drives like a car: hold the arrow and the driver does the whipping himself */
         else if (held.up && !G.empty) { const vv = Math.max(0, G.speed)/MAX_SPEED; G.speed = Math.min(turning ? 8.5 : MAX_SPEED, G.speed + (G.speed < 0 ? 6 : (1.1 + 4.8*(1 - vv))*CAR.acc)*dt); }   // 0-100 in about 10 s
         else if (G.empty && !held.down) G.speed = G.speed > 0 ? Math.max(0, G.speed - 1.6*dt) : Math.min(0, G.speed + 1.6*dt);
         else if (held.down) G.speed = Math.max(-3, G.speed - (G.speed > 0 ? 16*(1 - .45*(G.skid || 0)) : 4)*dt);
@@ -2237,7 +2238,7 @@
           if (P.ears) for (const e of P.ears) { if (Math.random() < dt*.8) e.userData.f = .2; e.userData.f = Math.max(0, (e.userData.f || 0) - dt); e.rotation.z = e.userData.s*(.15 + (e.userData.f > 0 ? Math.sin(e.userData.f/.2*Math.PI)*.8 : 0)); } }
         if (P.hTail) P.hTail.rotation.z = Math.sin(G.time*3)*.3;
         if (P.cartWheels) for (const wg of P.cartWheels) wg.rotation.x -= G.speed*dt/.72;
-        if (P.horse) { P.hYaw = (P.hYaw || 0) + ((-(G.head || 0)*1.1 + Math.sin(P.phase*.5)*.03*amp) - (P.hYaw || 0))*Math.min(1, dt*5); P.horse.rotation.y = P.hYaw; P.horse.position.y = Math.abs(Math.sin(P.phase))*.08*amp; P.horse.rotation.z = Math.sin(P.phase)*.05*amp; P.horse.rotation.x = Math.sin(P.phase*2 + 1)*.03*amp + (G.pvy || 0)*.02; }
+        if (P.horse) { const want = -(G.head || 0)*Math.max(-1, Math.min(1, G.speed/3))*1.25 + ((G.headVis || 0) - (G.yawExtra || 0)); P.hYaw = (P.hYaw || 0) + ((want + Math.sin(P.phase*.5)*.03*amp) - (P.hYaw || 0))*Math.min(1, dt*12);   /* the horse turns first; the cart, hanging off the shafts, comes round after it */ P.horse.rotation.y = P.hYaw; P.horse.position.y = Math.abs(Math.sin(P.phase))*.08*amp; P.horse.rotation.z = Math.sin(P.phase)*.05*amp; P.horse.rotation.x = Math.sin(P.phase*2 + 1)*.03*amp + (G.pvy || 0)*.02; }
         if (P.whipArm) { G.whipT = Math.max(0, (G.whipT || 0) - dt); P.whipArm.rotation.x = -.3 - Math.sin(Math.min(1, G.whipT/.35)*Math.PI)*1.2; }
         if (m === 'drive' && Math.abs(G.speed) > .5 && Math.random() < dt*.07) for (let q = 0; q < 3; q++) { const d = new THREE.Mesh(new THREE.SphereGeometry(.11, 6, 5), dungMat); d.position.set(player.position.x + rand(-.15, .15), .5, -2.2 + rand(-.1, .1)); scene.add(d); debris.push({m:d, v:new THREE.Vector3(rand(-.3, .3), -1, 0), av:new THREE.Vector3(rand(-2, 2), 0, rand(-2, 2)), t:0, life:14}); }
       }
@@ -2260,7 +2261,7 @@
       const idle = G.empty ? 0 : 1 - Math.min(1, Math.abs(G.speed)/6)*.78, vib = (Math.sin(G.time*61)*.004 + Math.sin(G.time*37.3)*.002 + Math.sin(G.time*9.7)*.0015)*idle;
       G.sinkY = (G.sinkY || 0) + ((G.sink || 0) - (G.sinkY || 0))*Math.min(1, dt*6);
       G.squat = (G.squat || 0)*Math.max(0, 1 - dt*4);
-      player.position.set(G.x, G.py + Math.abs(G.pitch)*.08 + vib + (G.rumble || 0) + (G.roadDrop || 0) - G.sinkY - (G.squat || 0), 0); const bend = sampleAt(12).th; G.bendNow = bend; G.steerNow = steer; G.headVis = (G.headVis || 0) + ((G.head*Math.max(-1, Math.min(1, G.speed/3)) + G.yawExtra) - (G.headVis || 0))*Math.min(1, dt*14); player.rotation.y = -G.headVis - bend*.6; { const vv = Math.min(1, Math.abs(G.speed)/MAX_SPEED), lean = steer*.09*vv*vv*Math.max(0, (Math.abs(steer) - .5)/.5), ls = G.leanS || 0; G.leanS = ls + (lean - ls)*Math.min(1, dt*3.5); if (Math.abs(lean) > .02 && Math.abs(G.leanS) < Math.abs(lean)*.6 && Math.random() < dt*4) G.rollV += lean*4; player.position.y += Math.abs(G.leanS)*(player.userData.halfW || .85); }   /* flat out into a full-lock bend: the body heels over on the outside wheels and the inside pair lifts */
+      player.position.set(G.x, G.py + Math.abs(G.pitch)*.08 + vib + (G.rumble || 0) + (G.roadDrop || 0) - G.sinkY - (G.squat || 0), 0); const bend = sampleAt(12).th; G.bendNow = bend; G.steerNow = steer; G.headVis = (G.headVis || 0) + ((G.head*Math.max(-1, Math.min(1, G.speed/3)) + G.yawExtra) - (G.headVis || 0))*Math.min(1, dt*(CAR.cart ? 3.5 : 14)); player.rotation.y = -G.headVis - bend*.6; { const vv = Math.min(1, Math.abs(G.speed)/MAX_SPEED), lean = steer*.09*vv*vv*Math.max(0, (Math.abs(steer) - .5)/.5), ls = G.leanS || 0; G.leanS = ls + (lean - ls)*Math.min(1, dt*3.5); if (Math.abs(lean) > .02 && Math.abs(G.leanS) < Math.abs(lean)*.6 && Math.random() < dt*4) G.rollV += lean*4; player.position.y += Math.abs(G.leanS)*(player.userData.halfW || .85); }   /* flat out into a full-lock bend: the body heels over on the outside wheels and the inside pair lifts */
       player.rotation.z = steer*.04*Math.min(1, Math.abs(G.speed)/5) + (G.leanS || 0) + bend*.12 + G.roll*CAR.roll + vib*.9; player.rotation.x = G.pitch + vib*.6;
       // ---- fork ----
       if (G.fork) { const f = G.fork; f.dist -= dz; place(f.group, f.dist, 0, 0); if (!f.decided && f.dist < -58) decideFork(); if (f.dist < -80) removeFork(); }
