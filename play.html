@@ -1255,6 +1255,7 @@
   function nextName(){ if (!nameBag.length) nameBag = NAMES.slice().sort(() => Math.random() - .5); return nameBag.pop(); }
   function genStation(){
     const r = Math.random(), s = {name:nextName()};
+    if (Math.random() < (G.damage >= 2 ? .38 : .16)) return {name:'У ТОЛЯНА', type:'service', n:2 + Math.floor(Math.random()*5), fuel:99, price:20, heal:3};   /* Tolyan's garage: three stages of bodywork for twenty litres, with its own queue */
     if (r < .15) s.type = 'closed';
     else if (r < .30) { s.type = 'dry'; s.fuel = 0; }
     else if (r < .42) { s.type = 'quiet'; s.fuel = 2 + Math.floor(Math.random()*4); }
@@ -1263,32 +1264,40 @@
   }
   // station group builder (local z: 0 = pump, +z toward the tail)
   const crossAsphalt = std(0x34323a, {roughness:.95}), apronMat = std(0x34323a, {roughness:.95, side:THREE.DoubleSide}), canopyMat = std(0xf3ead6, {roughness:.7}), pumpMat = std(0xc8202a, {roughness:.5}), asphalt = std(0x2b2930, {roughness:.95});
-  const PIT_X = 8.6;   // pit lane centre, just past the kerb
+  const PIT_X = 9.3;   // pit lane centre, just past the kerb
   function buildStation(s, side, n){
     side = side || 1; const tail = (n || 1)*SPACING + 30, front = -32, len = tail - front;
     const g = new THREE.Group();
     // apron: pit lane + pump island, from the exit ahead of the pumps back past the tail of the queue
     const z0 = front + 24, z1 = tail - 26;   // straight part of the pit lane; 30 m tapers on both ends
-    const apron = new THREE.Mesh(new THREE.PlaneGeometry(7.5, z1 - z0), apronMat); apron.rotation.x = -Math.PI/2; apron.position.set(9.9*side, .07, (z0 + z1)/2); apron.receiveShadow = true; g.add(apron);
-    const wedge = (za, zb, zc) => { const sh = new THREE.Shape(); sh.moveTo(6.15*side, -za); sh.lineTo(6.15*side, -zb); sh.lineTo(13.65*side, -zc); sh.closePath(); const m = new THREE.Mesh(new THREE.ShapeGeometry(sh), apronMat); m.rotation.x = -Math.PI/2; m.position.y = .07; m.receiveShadow = true; g.add(m); };
+    const apron = new THREE.Mesh(new THREE.PlaneGeometry(6.0, z1 - z0), apronMat); apron.rotation.x = -Math.PI/2; apron.position.set(9.15*side, .07, (z0 + z1)/2);   /* a pit lane one car wide, hugging the kerb: no room to slip past the queue on either side */ apron.receiveShadow = true; g.add(apron);
+    const wedge = (za, zb, zc) => { const sh = new THREE.Shape(); sh.moveTo(6.15*side, -za); sh.lineTo(6.15*side, -zb); sh.lineTo(12.15*side, -zc); sh.closePath(); const m = new THREE.Mesh(new THREE.ShapeGeometry(sh), apronMat); m.rotation.x = -Math.PI/2; m.position.y = .07; m.receiveShadow = true; g.add(m); };
     wedge(tail + 4, z1, z1); wedge(front - 6, z0, z0);
-    const outer = new THREE.Mesh(new THREE.BoxGeometry(.16, .02, z1 - z0), edgeMat); outer.position.set(13.55*side, .085, (z0 + z1)/2); g.add(outer);
-    const diag = (za, zb) => { const L = Math.hypot(7.5, zb - za); const m = new THREE.Mesh(new THREE.BoxGeometry(.16, .02, L), edgeMat); m.position.set(9.9*side, .085, (za + zb)/2); m.rotation.y = Math.atan2(7.5*side, zb - za); g.add(m); };
+    const outer = new THREE.Mesh(new THREE.BoxGeometry(.16, .02, z1 - z0), edgeMat); outer.position.set(12.05*side, .085, (z0 + z1)/2); g.add(outer);
+    const diag = (za, zb) => { const L = Math.hypot(6.0, zb - za); const m = new THREE.Mesh(new THREE.BoxGeometry(.16, .02, L), edgeMat); m.position.set(9.15*side, .085, (za + zb)/2); m.rotation.y = Math.atan2(6.0*side, zb - za); g.add(m); };
     diag(tail + 4, z1); diag(front - 6, z0);
     // the solid kerb line breaks into a dashed exit line through both tapers and stays solid along the pit lane itself
     const solid = new THREE.Mesh(new THREE.BoxGeometry(.18, .02, z1 - z0), edgeMat); solid.position.set(6.2*side, .095, (z0 + z1)/2); g.add(solid);
     for (let z = z1 + 1; z < tail + 4; z += 4) { const d = new THREE.Mesh(new THREE.BoxGeometry(.18, .02, 2), edgeMat); d.position.set(6.2*side, .095, z); g.add(d); }
     for (let z = front - 5; z < z0 - 1; z += 4) { const d = new THREE.Mesh(new THREE.BoxGeometry(.18, .02, 2), edgeMat); d.position.set(6.2*side, .095, z); g.add(d); }
     const roof = new THREE.Mesh(new THREE.BoxGeometry(7.6, .5, 12), canopyMat); roof.position.set(10*side, 5, 0); roof.castShadow = true; g.add(roof);
-    const stripe = new THREE.Mesh(new THREE.BoxGeometry(7.7, .3, 12.1), pumpMat); stripe.position.set(10*side, 4.75, 0); g.add(stripe);
+    const svc = s.type === 'service';
+    const stripe = new THREE.Mesh(new THREE.BoxGeometry(7.7, .3, 12.1), svc ? std(0x1d4fb5, {roughness:.5}) : pumpMat); stripe.position.set(10*side, 4.75, 0); g.add(stripe);
     for (let z of [-4.6, 4.6]) { const p = new THREE.Mesh(new THREE.CylinderGeometry(.18, .18, 5, 8), postMat); p.position.set(11.6*side, 2.5, z); g.add(p); }
     const island = new THREE.Mesh(new THREE.BoxGeometry(1.6, .18, 7), std(0xbdb7ad, {roughness:1})); island.position.set(11.6*side, .09, 0); g.add(island);
-    for (let z of [-1.5, 1.5]) { const pump = new THREE.Mesh(new THREE.BoxGeometry(.7, 1.6, 1.0), pumpMat); pump.position.set(11.6*side, .98, z); pump.castShadow = true; g.add(pump); const scr = new THREE.Mesh(new THREE.BoxGeometry(.1, .4, .6), glow(0xfff1c0, .8)); scr.position.set(11.2*side, 1.2, z); g.add(scr); }
+    if (svc) {
+      const steelM = std(0x8e9296, {roughness:.45, metalness:.7}), blueM = std(0x1d4fb5, {roughness:.5});
+      for (let z of [-2.2, 2.2]) { const post = new THREE.Mesh(new THREE.BoxGeometry(.3, 2.4, .3), blueM); post.position.set(11.6*side, 1.2, z); post.castShadow = true; g.add(post); const arm = new THREE.Mesh(new THREE.BoxGeometry(2.4, .12, .3), steelM); arm.position.set(10.6*side, 2.3, z); g.add(arm); }   /* a two-post lift */
+      const cab = new THREE.Mesh(new THREE.BoxGeometry(.9, 1.1, .6), std(0xc8202a, {roughness:.5})); cab.position.set(12*side, .64, -3.2); cab.castShadow = true; g.add(cab);   /* tool cabinet */
+      for (let i = 0; i < 4; i++) { const t = new THREE.Mesh(new THREE.TorusGeometry(.32, .12, 8, 16), tireMat); t.rotation.x = Math.PI/2; t.position.set(12.1*side, .14 + i*.25, 3.4); g.add(t); }   /* a stack of tyres */
+      const mech = makePed({shirt:0x1d4fb5, pants:0x1d4fb5}); mech.position.set(10.4*side, 0, -1.2); mech.rotation.y = side > 0 ? Math.PI/2 : -Math.PI/2; g.add(mech); g.userData.mech = mech;
+      const oil = new THREE.Mesh(new THREE.CircleGeometry(.9, 12), std(0x141416, {roughness:.2, metalness:.3})); oil.rotation.x = -Math.PI/2; oil.position.set(9.6*side, .09, 1.0); g.add(oil);
+    } else for (let z of [-1.5, 1.5]) { const pump = new THREE.Mesh(new THREE.BoxGeometry(.7, 1.6, 1.0), pumpMat); pump.position.set(11.6*side, .98, z); pump.castShadow = true; g.add(pump); const scr = new THREE.Mesh(new THREE.BoxGeometry(.1, .4, .6), glow(0xfff1c0, .8)); scr.position.set(11.2*side, 1.2, z); g.add(scr); }
     const shop = new THREE.Mesh(new THREE.BoxGeometry(7, 3.2, 8), std(0xe8d5b5)); shop.position.set(17.2*side, 1.6, 2); g.add(shop);
     const shopWin = new THREE.Mesh(new THREE.BoxGeometry(.1, 1.4, 5), glow(0xffe4a8, .9)); shopWin.position.set(13.65*side, 1.5, 2); g.add(shopWin);
     const post = new THREE.Mesh(new THREE.CylinderGeometry(.12, .12, 6, 8), postMat); post.position.set(12*side, 3, 14); g.add(post);
     const board = textPlane(boardLines(s, true), 5, 2.2, {bg:'#f7ead8'}); board.position.set(12*side, 6.8, 14); g.add(board); g.userData.board = board;
-    const entry = textPlane([{text:'АЗС «' + s.name + '»'}, {text:side > 0 ? 'съезд направо →' : '← съезд налево'}], 4.5, 1.6, {bg:'#1d6b3a', fg:'#ffffff', fg2:'#cfe8d6', border:'#ffffff'}); entry.position.set(14.2*side, 4.2, tail + 2); entry.rotation.y = side > 0 ? -.3 : .3; g.add(entry);
+    const entry = textPlane([{text:(svc ? 'АВТОСЕРВИС «' : 'АЗС «') + s.name + '»'}, {text:side > 0 ? 'съезд направо →' : '← съезд налево'}], 4.5, 1.6, {bg:svc ? '#1d4fb5' : '#1d6b3a', fg:'#ffffff', fg2:'#cfe8d6', border:'#ffffff'}); entry.position.set(14.2*side, 4.2, tail + 2); entry.rotation.y = side > 0 ? -.3 : .3; g.add(entry);
     const ep = new THREE.Mesh(new THREE.CylinderGeometry(.1, .1, 4, 8), postMat); ep.position.set(14.2*side, 2, tail + 2); g.add(ep);
     if (s.type === 'closed') { const parts = []; const bar = new THREE.Mesh(new THREE.BoxGeometry(5, .15, .15), std(0xffffff)); bar.position.set(8.6*side, 1, 10); g.add(bar); parts.push(bar); for (let i = 0; i < 3; i++) { const r = new THREE.Mesh(new THREE.BoxGeometry(1, .16, .16), pumpMat); r.position.set((6.6 + i*2)*side, 1, 10); g.add(r); parts.push(r); } const post = new THREE.Mesh(new THREE.CylinderGeometry(.12, .12, 1.1, 8), postMat); post.position.set(11.1*side, .55, 10); g.add(post); g.userData.barrier = parts; }
     // the block behind the forecourt, so the turn-off does not open onto emptiness
@@ -1302,6 +1311,7 @@
     return g;
   }
   function boardLines(s, revealed){
+    if (s.type === 'service') return [{text:'СЕРВИС «' + s.name + '»'}, {text:'Кузов: ' + s.heal + ' ступени за ' + s.price + ' л', color:'#1d4fb5'}];
     const title = {text:'АЗС «' + s.name + '»'};
     if (s.type === 'closed') return [title, {text:'ЗАКРЫТО', color:'#b0261f'}];
     if (!revealed) return [title, {text:'Бензин: ?', color:'#5a3a1a'}];
@@ -1550,18 +1560,29 @@
     const s0 = Math.abs(G.speed);
     if (CAR.hits2) { G.hitParity = !G.hitParity; if (G.hitParity) { G.speed = speedKeep ? G.speed*speedKeep : Math.min(G.speed, 4); G.shake = .8; sfx.crash(); flash('.4'); crashDebris(Math.max(1, G.damage)); return; } }   /* a tough truck: only every second hit costs a stage, twenty hits to the end */
     G.damage = Math.min(10, G.damage + 1); G.speed = speedKeep ? G.speed*speedKeep : Math.min(G.speed, 4); G.shake = 1; sfx.crash(); flash('.5'); updateDmgHud();
-    const d = G.damage, U = player.userData;
+    const d = G.damage;
     crashDebris(d);
-    if (d === 1) { shed('bumper'); shed('cargo'); player.userData.fridge = null; for (let i = debris.length - 1; i >= 0; i--) { const fr = debris[i]; if (fr.m.userData.part !== 'cargo' || fr.t > 0) continue; fr.v.set(rand(-1.2, 1.2), 6 + s0*.3, -(s0 + 4)); fr.av.set(rand(-5, 5), rand(-3, 3), rand(-5, 5)); fr.life = 4; break; } }   /* the fridge keeps going at the speed the car had: over the bonnet and away down the road */
-    else if (d === 2) shed('hood');
-    else if (d === 3) { shed('lamps'); shed('rack'); }
-    else if (d === 4) { shed('doors'); U.glass.opacity = G.fp ? .12 : .22; U.glass.needsUpdate = true; }
-    else if (d === 5) shed('doorsR');
-    else if (d === 6) shed('roof');
-    else if (d === 7) shed('tailgate');
-    else if (d === 8) { shed('frame'); shed('enginecover'); }
-    else if (d === 9) shed('hub');
+    applyStage(d, false, s0);
+  }
+  function dropQuiet(partName){ for (const c of player.children.filter(c => c.userData.part === partName)) player.remove(c); }
+  function applyStage(d, quiet, s0){
+    const U = player.userData, sh = quiet ? dropQuiet : shed;
+    if (d === 1) { sh('bumper'); sh('cargo'); player.userData.fridge = null; if (!quiet) for (let i = debris.length - 1; i >= 0; i--) { const fr = debris[i]; if (fr.m.userData.part !== 'cargo' || fr.t > 0) continue; fr.v.set(rand(-1.2, 1.2), 6 + s0*.3, -(s0 + 4)); fr.av.set(rand(-5, 5), rand(-3, 3), rand(-5, 5)); fr.life = 4; break; } }   /* the fridge keeps going at the speed the car had: over the bonnet and away down the road */
+    else if (d === 2) sh('hood');
+    else if (d === 3) { sh('lamps'); sh('rack'); }
+    else if (d === 4) { sh('doors'); U.glass.opacity = G.fp ? .12 : .22; U.glass.needsUpdate = true; }
+    else if (d === 5) sh('doorsR');
+    else if (d === 6) sh('roof');
+    else if (d === 7) sh('tailgate');
+    else if (d === 8) { sh('frame'); sh('enginecover'); }
+    else if (d === 9) sh('hub');
     else { shed('wheel'); shed('hub'); const drv = player.children.filter(c => c.userData.part === 'driver' || c.userData.part === 'driverArm'); for (const c of drv) { player.remove(c); c.position.add(player.position); scene.add(c); launch(c, new THREE.Vector3(rand(-.6, .6), rand(10, 12), rand(6, 8))); } G.sink = .3; gameOver('wreck'); }
+  }
+  function repairCar(n){   /* a fresh body, then the stages that are still owed are taken off it quietly */
+    G.damage = Math.max(0, G.damage - n); updateDmgHud();
+    scene.remove(player); player = makeSantaFe(); scene.add(player); dir.target = player; if (G.fp) setView(true);
+    for (let d = 1; d <= G.damage; d++) applyStage(d, true, 0);
+    G.shake = Math.max(G.shake, .3); for (let i = 0; i < 16; i++) chunk(.06, .06, .06, sparkMat, rand(-.9, .9), rand(.3, 1.2), rand(-1.5, 1.5), new THREE.Vector3(rand(-4, 4), rand(2, 5), rand(-2, 3)));
   }
   function landHard(fall){
     sfx.crash(); G.squat = Math.min(.22, fall*.03); G.pitch -= .06;
@@ -1829,6 +1850,7 @@
   function reveal(){
     const st = G.st, s = st.s; st.revealed = true; updateBoard();
     if (s.type === 'closed') return;
+    if (s.type === 'service') { announce('АВТОСЕРВИС', 'good', 1500, 'Толян чинит ' + s.heal + ' ступени за ' + s.price + ' литров'); return; }
     if (s.fuel > 0) announce('БЕНЗИН ЕСТЬ', 'good', 1500, 'на «' + s.name + '», примерно на ' + s.fuel + ' машин');
     else announce('БЕНЗИНА НЕТ', 'bad', 1500, s.type === 'queue' ? 'очередь ждёт бензовоз, езжай дальше' : 'на «' + s.name + '» пусто');
   }
@@ -1836,8 +1858,9 @@
     const st = G.st; if (!st) return; const s = st.s, el = $('board');
     const cars = st.q.filter(e => !e.gone).length;
     let l2 = s.type === 'closed' ? 'Закрыто.' : !st.revealed ? (s.type === 'queue' ? 'очередь ' + cars + ' маш. · бензин: <b>?</b>' : 'пусто · бензин: <b>?</b>') : s.fuel > 0 ? 'бензина на <b>' + s.fuel + '</b> маш.' + (s.type === 'queue' ? ' · очередь ' + cars : '') : '<b>БЕНЗИНА НЕТ</b>';
-    if (st.filling > 0) l2 = 'заправляемся… <b>' + Math.round(st.filling/3*100) + '%</b>';
-    el.innerHTML = 'АЗС «' + s.name + '»<br>' + l2;
+    if (s.type === 'service') l2 = 'ремонт <b>' + s.heal + '</b> ступени за <b>' + s.price + ' л</b> · очередь ' + cars;
+    if (st.filling > 0) l2 = (s.type === 'service' ? 'чиним… <b>' : 'заправляемся… <b>') + Math.round(st.filling/(s.type === 'service' ? 4.5 : 3)*100) + '%</b>';
+    el.innerHTML = (s.type === 'service' ? 'Сервис «' : 'АЗС «') + s.name + '»<br>' + l2;
     if (st.group.userData.board) st.group.userData.board.userData.redraw(boardLines(s, st.revealed));
   }
 
@@ -1970,11 +1993,16 @@
         if (z0 !== undefined) { st.arriveT = rand(10, 18); const d = pick(DRIVERS), m = makeCar(d.car.color, d.car.truck, d.car.taxi); m.position.set(4*side, 0, z0); st.group.add(m); st.q.push({kind:'car', mesh:m, z:z0, x:4*side, halfL:m.userData.halfL, d, waiting:null, arriving:true}); } else st.arriveT = 3;
       }
     }
-    const canFill = s.type === 'queue' || s.type === 'quiet';
+    const canFill = s.type === 'queue' || s.type === 'quiet' || s.type === 'service';
     // ---- the pump ----
     const head = cars[0];
     const playerAtPump = inLane && Math.abs(G.speed) < .4 && Math.abs(pz) < 2.6 && (!head || head.z > pz);
-    if (canFill && playerAtPump && !st.filled) {
+    if (s.type === 'service' && playerAtPump && !st.filled) {
+      if (G.damage <= 0) { st.filled = true; announce('КУЗОВ ЦЕЛ', '', 1300, 'чинить нечего, поезжай'); }
+      else if (G.fuel < s.price + 5) { st.filled = true; sfx.empty(); announce('НЕЧЕМ ПЛАТИТЬ', 'bad', 1500, 'Толян берёт бензином, нужно ' + s.price + ' литров'); }
+      else { st.filling += dt; if (st.group.userData.mech) st.group.userData.mech.position.y = Math.abs(Math.sin(G.time*6))*.08; if (st.filling >= 4.5) { st.filled = true; st.filling = 0; G.fuel = Math.max(1, G.fuel - s.price); repairCar(s.heal); sfx.fuel(); flash('.35', '#7ad37a'); announce('КУЗОВ ПОДЛАТАН', 'good', 1500, 'минус ' + s.price + ' литров, поезжай'); prompt(drivePrompt()); } }
+    } else if (s.type === 'service') st.filling = 0;
+    else if (canFill && playerAtPump && !st.filled) {
       if (s.fuel > 0) { st.filling += dt; if (st.filling >= 3) { st.filled = true; st.filling = 0; G.fuel = G.maxFuel; G.fills++; s.fuel--; sfx.fuel(); G.empty = false; flash('.35', '#7ad37a'); announce('ПОЛНЫЙ БАК', 'good', 1500, 'поезжай');   /* a fill is a full tank: the bar says so too */ prompt(drivePrompt()); } }
       else if (!st.noFuelTold) { st.noFuelTold = true; sfx.empty(); announce('КОЛОНКА ПУСТАЯ', 'bad', 1400, 'здесь ничего не нальют'); }
     } else st.filling = 0;
