@@ -2205,7 +2205,7 @@ const SQUEAL_B64 = 'SUQzBAAAAAAAIlRTU0UAAAAOAAADTGF2ZjYyLjMuMTAwAAAAAAAAAAAAAAD/
           G.neighDue = (G.neighDue === undefined ? rand(8, 20) : G.neighDue - dt); if (G.neighDue <= 0) { G.neighDue = rand(25, 50); sfx.neigh(); } }
         if (engineGain && !G.empty && !CAR.cart) {   /* four gears: the revs climb through each band and drop at the shift, with a clunk and a lift of the throttle */
           const v = Math.abs(G.speed)/MAX_SPEED, t = AC.currentTime, UP = [.22, .45, .72], DN = [.17, .38, .64]; let g = G.gear || 1;
-          if (g < 4 && v > UP[g - 1]) { g++; G.shiftT = .2; thud(.04, 3200, .32); tone(150, 95, .09, 'square', .13); } else if (g > 1 && v < DN[g - 2]) { g--; G.shiftT = .12; thud(.03, 2600, .2); }
+          if (g < 4 && v > UP[g - 1]) { g++; G.shiftT = .22; } else if (g > 1 && v < DN[g - 2]) { g--; G.shiftT = .12; }   /* no clunk: the shift is the lift of the throttle and the drop of the revs */
           G.gear = g; const lo = g === 1 ? 0 : DN[g - 2] - .03, hi = g === 4 ? 1.05 : UP[g - 1], r = Math.max(0, Math.min(1, (v - lo)/(hi - lo)));
           G.shiftT = Math.max(0, (G.shiftT || 0) - dt); const cut = G.shiftT > 0 ? .2 : 1;
           engineGain.gain.setTargetAtTime((.27 + v*.2)*cut, t, .05); if (engine) engine.playbackRate.setTargetAtTime((.7 + r*1.2 + (held.up ? .05 : 0))*(G.shiftT > 0 ? .85 : 1), t, .07); engineLp.frequency.setTargetAtTime(400 + r*2000 + v*400, t, .1); }
