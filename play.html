@@ -1117,9 +1117,9 @@
     for (const w of o.workers) {
       w.t += dt; const wd = o.dist - o.halfL + w.u*len, wl = o.lat + w.off;
       const near = G.mode === 'drive' && Math.abs(G.speed) > 2 && wd > -2 && wd < 2 + Math.abs(G.speed)*.3 && Math.abs(wl - G.x) < 3.2;
-      if (near && !(w.dodge > 0)) { w.dodge = 1.5; w.away = Math.sign(wl - G.x) || (Math.random() < .5 ? -1 : 1); w.goal = null; w.off0 = w.off; w.offT = w.away*(o.halfW + 2.2); }   /* one leap sideways, headlong, then a moment on the ground */
+      if (near && !(w.dodge > 0)) { w.dodge = 1.5; w.away = Math.sign(wl - G.x) || (Math.random() < .5 ? -1 : 1); w.goal = null; w.off0 = w.off; w.offT = w.off + w.away*2.8; }   /* a leap of under three metres, not a flight across the works */   /* one leap sideways, headlong, then a moment on the ground */
       let moving = false;
-      if (w.dodge > 0) { w.dodge -= dt; const jt = 1.5 - w.dodge, JT = .42; if (jt < JT) { const t = jt/JT; w.off = w.off0 + (w.offT - w.off0)*t; w.air = Math.sin(t*Math.PI)*.85; w.dive = 1; } else { w.off = w.offT; w.air = 0; w.dive = Math.max(0, 1 - (jt - JT)/.6); } moving = false; }
+      if (w.dodge > 0) { w.dodge -= dt; const jt = 1.5 - w.dodge, JT = .42; if (jt < JT) { const t = jt/JT; w.off = w.off0 + (w.offT - w.off0)*t; w.air = Math.sin(t*Math.PI)*.6; w.dive = 1; } else { w.off = w.offT; w.air = 0; w.dive = Math.max(0, 1 - (jt - JT)/.6); } moving = false; }
       else if (Math.abs(w.off) > o.halfW - .5) { w.off += (Math.sign(w.off)*(o.halfW - .8) - w.off)*Math.min(1, dt*.9); moving = true; }
       else if (w.goal !== null) { const du = w.goal - w.u; if (Math.abs(du) < .01) w.goal = null; else { w.u += Math.sign(du)*Math.min(Math.abs(du), dt*.9/len); moving = true; w.dir = Math.sign(du); } }
       else if (Math.random() < dt*.05) w.goal = Math.max(.06, Math.min(.94, w.u + rand(-.12, .12)));
