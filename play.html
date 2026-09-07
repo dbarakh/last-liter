@@ -347,7 +347,7 @@
     part = 'hood'; box(W - .36, .06, 1.44, paint, 0, .97, -1.42); box(.5, .025, 1.3, paint, 0, 1.005, -1.42);
     // ---- roof: tall glass house on thin pillars, flat roof, chrome window frames and gutters, C-pillar vents, steel rack
     part = 'roof';
-    box(W - .1, .48, 1.86, glass, 0, BELT + .24, .18);
+    { const sh = new THREE.Shape(); [[-.74, BELT], [1.22, BELT], [.95, BELT + .48], [-.4, BELT + .48]].forEach(([z, y], i) => i ? sh.lineTo(-z, y) : sh.moveTo(-z, y)); sh.closePath(); const gg = new THREE.Mesh(new THREE.ExtrudeGeometry(sh, {depth:W - .1, bevelEnabled:false}), glass); gg.rotation.y = Math.PI/2; gg.position.x = -(W - .1)/2; gg.userData.part = 'roof'; g.add(gg); }   /* the side glass is a trapezoid under the roof: its front edge follows the windscreen, its rear edge the C-pillar, nothing sticks out over the bonnet or the boot */
     box(W - .34, .05, .7, glass, 0, BELT + .25, -.62, -.84); box(W - .34, .05, .62, glass, 0, BELT + .26, 1.1, 1.05);
     box(W - .12, .05, 1.54, paint, 0, BELT + .5, .35);
     for (let s of [-1, 1]) { const x = s*(W/2 - .12); box(.05, .7, .07, paint, x, BELT + .25, -.62, .73); box(.05, .46, .06, paint, x, BELT + .24, .3); box(.07, .62, .1, paint, x, BELT + .26, 1.1, -.52); box(.02, .03, 1.6, chrome, s*(W/2 - .06), BELT + .49, .35); box(.02, .05, .16, black, s*(W/2 - .12), BELT + .3, 1.02, -.52); }
