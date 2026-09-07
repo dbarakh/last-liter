@@ -97,7 +97,7 @@
   <div id="flash"></div>
   <div id="fade"></div>
   <div id="hud">
-    <div class="stat" id="fuelBox"><span class="lbl">Топлива на</span><span class="val" id="fuelVal">1.7 км</span><div id="fuelBar"><i id="fuelFill" style="width:75%"></i></div><span class="lbl" style="margin-top:8px;display:none">Мгновенный расход <b id="rateVal" style="color:var(--ink)">×0.4</b></span><div id="rateBar" style="display:none"><i id="rateFill" style="width:18%"></i></div><span class="lbl" style="margin-top:8px">До заправки <b id="stVal" style="color:var(--ink)">не видно</b></span></div>
+    <div class="stat" id="fuelBox"><span class="lbl" id="fuelLbl">Топлива на</span><span class="val" id="fuelVal">1.7 км</span><div id="fuelBar"><i id="fuelFill" style="width:75%"></i></div><span class="lbl" style="margin-top:8px;display:none">Мгновенный расход <b id="rateVal" style="color:var(--ink)">×0.4</b></span><div id="rateBar" style="display:none"><i id="rateFill" style="width:18%"></i></div><span class="lbl" style="margin-top:8px">До заправки <b id="stVal" style="color:var(--ink)">не видно</b></span></div>
     <div id="center">
       <span class="lbl">Проехал</span><span class="val" id="odo" style="font-size:clamp(26px,4.6vw,44px);color:var(--accent)">0.00 км</span>
       <span class="lbl" id="ctxLbl">Скорость</span><span class="val" id="ctxVal">0 км/ч</span>
@@ -552,7 +552,10 @@
     k.part = 'interior'; k.box(1.2, .06, .4, woodD, 0, 1.3, -.7); for (const s of [-1, 1]) k.box(.06, .3, .06, woodD, s*.5, 1.15, -.7);
     k.part = 'driver'; k.box(.4, .46, .26, M.shirt, -.35, 1.62, -.7); k.box(.24, .26, .24, M.skin, -.35, 1.98, -.7); k.box(.34, .12, .34, std(0x3a2a1a), -.35, 2.13, -.7);
     k.part = 'driverArm'; k.box(.09, .09, .5, M.shirt, -.5, 1.6, -1.0, .3);
-    { const arm = new THREE.Group(); arm.position.set(-.2, 1.72, -.72); arm.userData.part = 'driverArm'; g.add(arm); const a = new THREE.Mesh(new THREE.BoxGeometry(.09, .09, .5), M.shirt); a.position.set(0, 0, -.25); arm.add(a); const w = new THREE.Mesh(new THREE.CylinderGeometry(.015, .01, 1.1, 6), woodD); w.position.set(0, .3, -.55); w.rotation.x = .9; arm.add(w); arm.rotation.x = -.3; g.userData.whipArm = arm; }
+    { const arm = new THREE.Group(); arm.position.set(-.2, 1.84, -.72); arm.userData.part = 'driverArm'; g.add(arm);   /* the whip hand: shoulder pivot, forearm raised ahead, the whip held at its butt and pointing up over the horse */
+      const a = new THREE.Mesh(new THREE.BoxGeometry(.09, .09, .42), M.shirt); a.position.set(0, .1, -.19); a.rotation.x = .5; arm.add(a); const hand = new THREE.Mesh(new THREE.BoxGeometry(.1, .1, .1), M.skin); hand.position.set(0, .2, -.37); arm.add(hand);
+      const w = new THREE.Mesh(new THREE.CylinderGeometry(.006, .014, 1.4, 6), woodD); w.position.set(0, .2 + .46, -.37 - .53); w.rotation.x = -.85; arm.add(w); const lash = new THREE.Mesh(new THREE.CylinderGeometry(.004, .006, .5, 5), M.dark); lash.position.set(0, .2 + .92 - .1, -.37 - 1.06 - .2); lash.rotation.x = -1.6; arm.add(lash);
+      arm.rotation.x = -.3; g.userData.whipArm = arm; }
     for (const s of [-1, 1]) { const rein = new THREE.Mesh(new THREE.BoxGeometry(.02, .02, 2.4), M.dark); rein.position.set(s*.3, 1.55, -2.0); rein.userData.part = 'interior'; g.add(rein); }
     const cartWheels = []; for (const s of [-1, 1]) { const wg = new THREE.Group(); wg.position.set(s*1.0, .72, .4); wg.userData.part = 'wheel'; g.add(wg); cartWheels.push(wg); const rim = new THREE.Mesh(new THREE.TorusGeometry(.66, .07, 8, 20), woodD); rim.rotation.y = Math.PI/2; rim.castShadow = true; wg.add(rim); for (let i = 0; i < 6; i++) { const sp = new THREE.Mesh(new THREE.BoxGeometry(.05, 1.28, .05), wood); sp.rotation.x = i*Math.PI/6; wg.add(sp); } const hub = new THREE.Mesh(new THREE.CylinderGeometry(.12, .12, .16, 10), woodD); hub.rotation.z = Math.PI/2; wg.add(hub); } g.userData.cartWheels = cartWheels;
     // the horse hangs on its own pivot at the front of the cart: it bobs, sways and turns ahead of the cart in the shafts
@@ -624,13 +627,16 @@
     } catch(e) { fail(); }
   }
   function tone(f1, f2, dur, type, vol){ if (!AC) return; const o = AC.createOscillator(), g = AC.createGain(), t = AC.currentTime; o.type = type || 'square'; o.frequency.setValueAtTime(f1, t); o.frequency.exponentialRampToValueAtTime(f2, t + dur); g.gain.setValueAtTime(vol || .15, t); g.gain.exponentialRampToValueAtTime(.001, t + dur); o.connect(g); g.connect(master); o.start(t); o.stop(t + dur + .02); }
+  function neigh(){ if (!AC) return; const t = AC.currentTime, dur = .95; const g = AC.createGain(); g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.2, t + .06); g.gain.setValueAtTime(.2, t + .5); g.gain.exponentialRampToValueAtTime(.0005, t + dur); const bp = AC.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 1500; bp.Q.value = 1.2; bp.connect(g); g.connect(master); const lfo = AC.createOscillator(), lg = AC.createGain(); lfo.frequency.value = 12; lg.gain.value = 45; lfo.connect(lg);
+    for (const [f0, f1, f2, v, type] of [[1150, 780, 420, 1, 'sawtooth'], [2300, 1560, 840, .35, 'square']]) { const o = AC.createOscillator(), og = AC.createGain(); o.type = type; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f1, t + .45); o.frequency.exponentialRampToValueAtTime(f2, t + dur); lg.connect(o.frequency); og.gain.value = v; o.connect(og); og.connect(bp); o.start(t); o.stop(t + dur); } lfo.start(t); lfo.stop(t + dur); }   /* a whinny: two gliding voices with a fast vibrato, falling away at the end */
+  function snort(){ if (!AC) return; const t = AC.currentTime, dur = .35, n = Math.floor(AC.sampleRate*dur), b = AC.createBuffer(1, n, AC.sampleRate), d = b.getChannelData(0); for (let i = 0; i < n; i++) { const u = i/n; d[i] = (Math.random()*2 - 1)*Math.sin(u*Math.PI)*(.55 + .45*Math.sin(u*dur*2*Math.PI*28)); } const s = AC.createBufferSource(); s.buffer = b; const f = AC.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 1100; const g = AC.createGain(); g.gain.value = .35; s.connect(f); f.connect(g); g.connect(master); s.start(t); }   /* a snort: a fluttering puff of breath */
   function thud(dur, cutoff, vol){ if (!AC) return; const n = Math.floor(AC.sampleRate*dur), b = AC.createBuffer(1, n, AC.sampleRate), d = b.getChannelData(0); for (let i = 0; i < n; i++) d[i] = (Math.random()*2 - 1)*(1 - i/n)*(1 - i/n); const s = AC.createBufferSource(); s.buffer = b; const f = AC.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = cutoff; const g = AC.createGain(); g.gain.value = vol; s.connect(f); f.connect(g); g.connect(master); s.start(); }
   const sfx = {
     hit: () => { thud(.14, 700, .6); tone(180, 60, .12, 'square', .15); }, block: () => { thud(.08, 2500, .3); tone(900, 500, .08, 'triangle', .12); },
     ko: () => { thud(.5, 500, .8); tone(140, 30, .6, 'sawtooth', .25); }, whiff: () => tone(300, 90, .12, 'sine', .08),
     horn: () => { tone(420, 400, .35, 'sawtooth', .18); tone(520, 500, .35, 'sawtooth', .14); }, crash: () => { thud(.4, 900, .6); tone(200, 50, .4, 'sawtooth', .2); },
     fuel: () => { [520, 660, 780, 1040].forEach((f, i) => setTimeout(() => tone(f, f*1.02, .18, 'square', .12), i*90)); },
-    cone: () => { thud(.12, 1400, .3); },
+    cone: () => { thud(.12, 1400, .3); }, neigh, snort,
     bump: () => { thud(.22, 160, .7); tone(95, 48, .16, 'sine', .28); setTimeout(() => thud(.08, 500, .12), 90); },
     knock: () => { thud(.18, 1100, .55); tone(260, 80, .14, 'square', .14); },
     whip: () => { thud(.05, 3800, .5); tone(1600, 500, .07, 'square', .1); },
@@ -1142,6 +1148,7 @@
       if (w.wind > 0) { const k = Math.min(1, (0.4 - w.wind)/.15); L[1].rotation.x = -2.9*k; L[3].rotation.x = -2.9*k; L[0].rotation.x = 0; L[2].rotation.x = 0; w.m.rotation.x += .25*k; if (w.m.userData.shovel) { const sv = w.m.userData.shovel; sv.rotation.x = -.9 - 1.6*k; sv.position.y = 1.0 + .45*k; sv.position.z = -.25 + .35*k; } }   /* the wind-up: he squares up to the car, both arms and the spade go up over his head */
       else if (w.dodge > 0 && w.hop > 0) { const pr = 1 - w.hop; w.m.rotation.x -= 1.25*Math.min(1, pr*3 + .3); w.m.position.y += Math.sin(Math.min(1, pr)*Math.PI)*.75; L[1].rotation.x = -2.9; L[3].rotation.x = -2.9; L[0].rotation.x = .3; L[2].rotation.x = .3; if (w.m.userData.shovel) w.m.userData.shovel.rotation.x = -.2; }   /* the headlong dive: body flat, arms out, over the hump and down */
       else if (moving) { const sw = Math.sin(w.t*8)*.5; L[0].rotation.x = sw; L[2].rotation.x = -sw; L[1].rotation.x = -sw*.7; L[3].rotation.x = sw*.7; if (w.m.userData.shovel) w.m.userData.shovel.rotation.x = -.2; }
+      else if (!w.m.userData.shovel) { L[0].rotation.x = 0; L[2].rotation.x = 0; L[1].rotation.x = -.15 + Math.sin(w.t*1.3)*.12; L[3].rotation.x = -.15 - Math.sin(w.t*1.3)*.12; w.m.rotation.z += Math.sin(w.t*.9)*.04; }   /* no spade: hands hanging, weight from foot to foot */
       else { const dig = Math.sin(w.t*2.6 + (w.u*20)); L[0].rotation.x = 0; L[2].rotation.x = 0; L[1].rotation.x = -.7 + dig*.45; L[3].rotation.x = -.7 + dig*.45; if (w.m.userData.shovel) { const sv = w.m.userData.shovel; sv.rotation.x = -1.2 + Math.max(0, dig)*.25; sv.position.z = -.25 - Math.max(0, dig)*.2; sv.position.y = 1.0 + Math.max(0, -dig)*.22; }   /* thrust the blade in, lever, lift: digging, not sweeping */ w.m.position.y -= Math.max(0, dig)*.06; }
       w.m.visible = o.mesh.visible !== false;
     }
@@ -1505,7 +1512,7 @@
   function fadeTo(fn){ const f = $('fade'); f.style.opacity = '1'; setTimeout(() => { fn(); setTimeout(() => f.style.opacity = '0', 60); }, 280); }
   function addFuel(n){ G.fuel = Math.min(G.maxFuel, G.fuel + n); }
   function updateRep(){ const pips = $('rep').children; for (let i = 0; i < pips.length; i++) pips[i].classList.toggle('on', i < G.rep); }
-  function clearObstacles(all){ for (let i = obstacles.length - 1; i >= 0; i--) { const o = obstacles[i]; if (all || o.dist > -30) { world.remove(o.mesh); obstacles.splice(i, 1); } } }
+  function clearObstacles(all){ for (let i = obstacles.length - 1; i >= 0; i--) { const o = obstacles[i]; if (all || o.dist > -30 || o.chaser) { world.remove(o.mesh); if (o.beam) world.remove(o.beam); obstacles.splice(i, 1); } } }
   function removeStation(){ if (G.st) { for (const f of G.st.group.userData.fillers || []) if (f.e) { world.remove(f.e.m); const k = decor.indexOf(f.e); if (k >= 0) decor.splice(k, 1); } world.remove(G.st.group); G.st = null; $('board').style.display = 'none'; } }
   function removeFork(){ if (G.fork) { world.remove(G.fork.group); G.fork = null; } }
   const PROMPT_DRIVE = '<kbd>↑</kbd> газ · <kbd>↓</kbd> тормоз · <kbd>←</kbd><kbd>→</kbd> руль · <kbd>V</kbd> вид · <kbd>Esc</kbd> меню', PROMPT_CART = '<kbd>↑</kbd> ехать · <kbd>↓</kbd> тормоз · <kbd>←</kbd><kbd>→</kbd> руль · <kbd>V</kbd> вид · <kbd>Esc</kbd> меню';
@@ -1514,7 +1521,7 @@
   function start(){
     audioInit(); clearObstacles(true); removeStation(); removeFork(); clearWreck(); clearCrossings(); TRACK.zones.length = 0; TRACK.turns.length = 0; G.turnOffer = null; G.turnHold = 0;
     G.menu = false; $('menuCard').hidden = true; CAR = CARS[startCar] || CARS.lada; MAX_SPEED = CAR.vmax/3.6; $('dmg').classList.toggle('one', !!CAR.cart);
-    scene.remove(player); player = makeSantaFe(); scene.add(player); dir.target = player; if (G.fp) setView(true); $('fuelBox').style.display = CAR.cart ? 'none' : '';   /* a horse has no tank */
+    scene.remove(player); player = makeSantaFe(); scene.add(player); dir.target = player; if (G.fp) setView(true); $('fuelLbl').textContent = CAR.cart ? 'Силы лошади' : 'Топлива на'; G.stam = 1; G.tired = false;   /* a horse has no tank, but it has only so much wind */
     fscene.remove(fPlayerCar); fPlayerCar = makeSantaFe(); fPlayerCar.rotation.y = Math.PI/2; fPlayerCar.position.set(-11, 0, -4.5); fscene.add(fPlayerCar);
     Object.assign(G, {mode:'drive', damage:0, ruinUntil:0, ruinCool:0, ruinFree:0, crossTimer:12, busTimer:10, steerS:0, onMilled:false, milledNow:false, roadDrop:0, rumble:0, frX:0, frV:0, frZ:0, frW:0, frUy:0, frVy:0, prevPvy:0, prevSlide:0, empty:false, sink:0, sinkY:0, roll:0, rollV:0, head:0, skid:0, yawExtra:0, slideV:0, puffT:0, rate:RATE_IDLE, fuel:START_FUEL, fills:0, fights:0, rep:0, time:0, dist:0, speed:0, x:0, slideTo:null, py:0, pvy:0, shake:0, hitCool:0, bumpCool:0, eventTimer:4, nextRowAt:40, paused:false, smokeT:0});
     biomeSegs[0].kind = startBiome;   /* the whole run goes where you picked on the start screen */
@@ -1572,7 +1579,7 @@
     if (G.mode !== 'drive') return;
     const s0 = Math.abs(G.speed);
     if (CAR.hits2) { G.hitParity = !G.hitParity; if (G.hitParity) { G.speed = speedKeep ? G.speed*speedKeep : Math.min(G.speed, 4); G.shake = .8; sfx.crash(); flash('.4'); crashDebris(Math.max(1, G.damage)); return; } }   /* a tough truck: only every second hit costs a stage, twenty hits to the end */
-    if (CAR.cart) G.damage = 9;   /* the cart has one life: any hit is the end of it */
+    if (CAR.cart) { G.damage = 9; sfx.neigh(); }   /* the cart has one life: any hit is the end of it */
     G.damage = Math.min(10, G.damage + 1); G.speed = speedKeep ? G.speed*speedKeep : Math.min(G.speed, 4); G.shake = 1; sfx.crash(); flash('.5'); updateDmgHud();
     const d = G.damage;
     crashDebris(d);
@@ -1770,17 +1777,17 @@
   }
 
   // ---- road spawns ----
-  function addWorkers(patch, n, w){ patch.workers = patch.workers || []; for (let k = 0; k < n; k++) { const wk = makePed({shirt:0xff7a1f, pants:0x3b4a6a, helmet:pick([0xf2c614, 0xf2f2f2, 0xe8531f])}); { const sh = new THREE.Group(); sh.position.set(.3, 1.0, -.25); sh.rotation.x = -.9; wk.add(sh); const stick = new THREE.Mesh(new THREE.CylinderGeometry(.018, .018, 1.3, 6), std(0x8a6a3e)); stick.position.y = -.3; sh.add(stick); const grip = new THREE.Mesh(new THREE.TorusGeometry(.07, .014, 6, 12), std(0x2a2a30)); grip.position.y = .4; sh.add(grip); const steel = std(0x6f7276, {metalness:.6, roughness:.4}); const blade = new THREE.Mesh(new THREE.BoxGeometry(.27, .3, .018), steel); blade.position.y = -1.03; sh.add(blade); const tip = new THREE.Mesh(new THREE.BoxGeometry(.19, .19, .018), steel); tip.position.y = -1.18; tip.rotation.z = Math.PI/4; sh.add(tip); const shoulder = new THREE.Mesh(new THREE.BoxGeometry(.3, .03, .03), steel); shoulder.position.y = -.88; sh.add(shoulder);   /* a spade: D-grip, straight shaft, pointed blade in line with it */ wk.userData.shovel = sh; } world.add(wk); patch.workers.push({m:wk, u:(k + .5)/n + rand(-.05, .05), off:rand(-w/2 + .7, w/2 - .7), dir:Math.random() < .5 ? -1 : 1, t:Math.random()*6, pause:0, walk:0, goal:null}); } }   /* the crew in orange vests and helmets, pacing the milled surface */
+  function addWorkers(patch, n, w){ patch.workers = patch.workers || []; const shovelP = .45 + Math.min(.45, G.dist/5000); for (let k = 0; k < n; k++) { const wk = makePed({shirt:0xff7a1f, pants:0x3b4a6a, helmet:pick([0xf2c614, 0xf2f2f2, 0xe8531f])}); if (Math.random() < shovelP) { const sh = new THREE.Group(); sh.position.set(.3, 1.0, -.25); sh.rotation.x = -.9; wk.add(sh); const stick = new THREE.Mesh(new THREE.CylinderGeometry(.018, .018, 1.3, 6), std(0x8a6a3e)); stick.position.y = -.3; sh.add(stick); const grip = new THREE.Mesh(new THREE.TorusGeometry(.07, .014, 6, 12), std(0x2a2a30)); grip.position.y = .4; sh.add(grip); const steel = std(0x6f7276, {metalness:.6, roughness:.4}); const blade = new THREE.Mesh(new THREE.BoxGeometry(.27, .3, .018), steel); blade.position.y = -1.03; sh.add(blade); const tip = new THREE.Mesh(new THREE.BoxGeometry(.19, .19, .018), steel); tip.position.y = -1.18; tip.rotation.z = Math.PI/4; sh.add(tip); const shoulder = new THREE.Mesh(new THREE.BoxGeometry(.3, .03, .03), steel); shoulder.position.y = -.88; sh.add(shoulder);   /* a spade: D-grip, straight shaft, pointed blade in line with it */ wk.userData.shovel = sh; } world.add(wk); patch.workers.push({m:wk, u:(k + .5)/n + rand(-.05, .05), off:rand(-w/2 + .7, w/2 - .7), dir:Math.random() < .5 ? -1 : 1, t:Math.random()*6, pause:0, walk:0, goal:null}); } }   /* the crew in orange vests and helmets, pacing the milled surface */
   function spawnRow(){
     // nothing parks or lies in a junction: skip the whole row when a cross street is near
     if (crossings.some(c => Math.abs(c.dist - 196) < 32 + c.half)) { G.nextRowAt = G.dist + 8; return; }
     if (obstacles.some(o => o.kind === 'ramp' && 215 > o.dist - o.halfL - 6 && 180 < o.dist + o.halfL + 55)) { G.nextRowAt = G.dist + 6; return; }   /* nothing at all in the fifty metres past the ramp: that is where you land */
     const bio = biomeAt(G.dist + 190), lanes = [0, 1, 2].sort(() => Math.random() - .5), blockedCount = Math.random() < .55 ? 2 : 1, wreckNear = obstacles.some(o => o.wreck && Math.abs(o.dist - 200) < 40);
-    if (!(G.ruinUntil > G.dist) && bio !== 'village' && !G.st && !G.fork && Math.random() < .035 && G.dist > G.ruinCool && !crossings.some(c => c.dist > 120) && !obstacles.some(o => o.dist > 140 && (o.kind === 'milled' || o.kind === 'ramp' || o.wreck))) { G.ruinUntil = G.dist + 280 + Math.random()*80; G.ruinCool = G.ruinUntil + 600; G.ruinCrewAt = G.dist + 10; G.ruinFree = LANES[Math.floor(Math.random()*3)]; for (const li of LANES) if (li !== G.ruinFree) for (const off of [-1.2, 1.2]) { const c = makeCone(); world.add(c); obstacles.push({mesh:c, kind:'cone', speed:0, halfL:.35, halfW:.35, dist:186 + (off > 0 ? 1.5 : 0), lat:li + off, yaw:0}); } }   /* now and then the asphalt simply ends: three hundred metres of holes over two lanes, one lane spared, cones across the bad ones first */
+    if (!(G.ruinUntil > G.dist) && bio !== 'village' && !G.st && !G.fork && Math.random() < .035 + Math.min(.04, G.dist/10000) && G.dist > G.ruinCool && !crossings.some(c => c.dist > 120) && !obstacles.some(o => o.dist > 140 && (o.kind === 'milled' || o.kind === 'ramp' || o.wreck))) { G.ruinUntil = G.dist + 280 + Math.random()*80; G.ruinCool = G.ruinUntil + Math.max(250, 600 - G.dist/10); G.ruinCrewAt = G.dist + 10; G.ruinFree = LANES[Math.floor(Math.random()*3)]; for (const li of LANES) if (li !== G.ruinFree) for (const off of [-1.2, 1.2]) { const c = makeCone(); world.add(c); obstacles.push({mesh:c, kind:'cone', speed:0, halfL:.35, halfW:.35, dist:186 + (off > 0 ? 1.5 : 0), lat:li + off, yaw:0}); } }   /* now and then the asphalt simply ends: three hundred metres of holes over two lanes, one lane spared, cones across the bad ones first */
     if (G.ruinUntil > G.dist) {
       for (let k = 0; k < 6; k++) { const lat = pick(LANES.filter(l => l !== G.ruinFree)) + rand(-1.7, 1.7), dd = 190 + Math.random()*20; if (obstacles.some(o => (o.kind === 'bump' && Math.abs(o.dist - dd) < 1.7 && Math.abs(o.lat - lat) < 2.2) || (o.kind === 'ramp' && Math.abs(o.lat - lat) < 3.2))) continue; const m = makePothole(); world.add(m); obstacles.push({mesh:m, kind:'bump', speed:0, halfL:.7, halfW:1.0, dist:dd, lat, yaw:0}); }
       if (Math.random() < .2) { const li = Math.max(0, LANES.indexOf(G.ruinFree)); if (!obstacles.some(o => o.kind === 'car' && Math.abs(o.lat - LANES[li]) < 2.2 && o.dist > 168)) { const m = makeCar(pick(trafficColors), false); world.add(m); obstacles.push({mesh:m, kind:'car', speed:7 + Math.random()*3, halfL:m.userData.halfL, halfW:.98, dist:190 + Math.random()*8, lat:LANES[li], yaw:0}); } }   /* the odd car crawling through */
-      if (!(G.ruinCrewAt > G.dist)) { G.ruinCrewAt = G.dist + 50; const lane = pick(LANES.filter(l => l !== G.ruinFree)); const crew = {mesh:new THREE.Group(), kind:'milled', ghost:true, speed:0, halfL:14, halfW:2.0, dist:200, lat:lane, yaw:0}; world.add(crew.mesh); obstacles.push(crew); milledLive.push(crew); addWorkers(crew, 1, 4.0); }   /* on the three hundred metres of holes a man with a spade every fifty: five or six over the stretch */
+      if (!(G.ruinCrewAt > G.dist)) { G.ruinCrewAt = G.dist + Math.max(25, 50 - G.dist/150); const lane = pick(LANES.filter(l => l !== G.ruinFree)); const crew = {mesh:new THREE.Group(), kind:'milled', ghost:true, speed:0, halfL:14, halfW:2.0, dist:200, lat:lane, yaw:0}; world.add(crew.mesh); obstacles.push(crew); milledLive.push(crew); addWorkers(crew, 1, 4.0); }   /* on the three hundred metres of holes a man with a spade every fifty: five or six over the stretch */
       G.nextRowAt = G.dist + 8 + Math.random()*4; return;
     }
     for (const li of lanes.slice(0, blockedCount)) {
@@ -1798,8 +1805,8 @@
     if (bio === 'city' && Math.random() < .15 && !obstacles.some(o => o.kind === 'car' && Math.abs(o.lat - 4) < 2.2 && o.dist > 150) && !crossings.some(c => Math.abs(c.dist - 200) < 50 + c.half)) { const m = makeCar(pick(trafficColors), false); world.add(m); obstacles.push({mesh:m, kind:'car', parked:true, speed:0, base:0, halfL:m.userData.halfL, halfW:.98, dist:198 + Math.random()*10, lat:4 + rand(-.3, .3), yaw:0}); }
     if (false && bio === 'city' && Math.random() < .3 && !obstacles.some(o => (o.kind === 'car' && Math.abs(o.lat - 4) < 2.2 && o.dist > 165) || (o.kind === 'ramp' && Math.abs(o.lat - 4) < 3.2))) { const b = makeBike(); world.add(b); obstacles.push({mesh:b, kind:'car', bike:true, speed:6, base:6, halfL:.9, halfW:.35, dist:190, lat:4 + rand(-.5, .5), yaw:0}); }   /* a cyclist in the first lane */
     // no cars parked on the pavement: parking is in the marked lots or, now and then, in the first lane
-    if (bio === 'city' && (Math.random() < .14 || G.forceMilled) && !obstacles.some(o => o.kind === 'milled' && o.dist > 100) && !crossings.some(c => c.dist + c.half > 130 && c.dist - c.half < 370)) { const two = Math.random() < .5, li = lanes[0], w = two ? 8.6 : 4.4, len = rand(30, 55), lat = two ? (li === 0 ? -2 : li === 2 ? 2 : (Math.random() < .5 ? -2 : 2)) : LANES[li]; const m = makeMilled(w, len); world.add(m); const patch = {mesh:m, kind:'milled', speed:0, halfL:len/2, halfW:w/2, dist:196 + len/2, lat, yaw:0}; obstacles.push(patch); milledLive.push(patch);
-      addWorkers(patch, 5, w);
+    if (bio === 'city' && (Math.random() < .14 + Math.min(.2, G.dist/8000) || G.forceMilled) && !obstacles.some(o => o.kind === 'milled' && o.dist > 100) && !crossings.some(c => c.dist + c.half > 130 && c.dist - c.half < 370)) { const two = Math.random() < .5, li = lanes[0], w = two ? 8.6 : 4.4, len = rand(30, 55), lat = two ? (li === 0 ? -2 : li === 2 ? 2 : (Math.random() < .5 ? -2 : 2)) : LANES[li]; const m = makeMilled(w, len); world.add(m); const patch = {mesh:m, kind:'milled', speed:0, halfL:len/2, halfW:w/2, dist:196 + len/2, lat, yaw:0}; obstacles.push(patch); milledLive.push(patch);
+      addWorkers(patch, 5 + Math.floor(Math.min(4, G.dist/1500)), w);
       { const r = makeRoller(); world.add(r); obstacles.push({mesh:r, kind:'car', roller:true, parked:true, patch, dir:1, speed:0, base:0, halfL:2.4, halfW:1.1, dist:patch.dist + rand(-len/3, len/3), lat:lat + (two ? rand(-2, 2) : 0), yaw:0}); }   /* the roller is parked on the works, the crew works round it */
       const nc = two ? 4 : 2; for (let k = 0; k < nc; k++) { const c = makeCone(); world.add(c); obstacles.push({mesh:c, kind:'cone', soft:true, speed:0, halfL:.35, halfW:.35, dist:193, lat:lat - w/2 + .6 + k*((w - 1.2)/(nc - 1)), yaw:0}); } }
     if (bio === 'city' && !wreckNear && Math.random() < .08 && !obstacles.some(o => o.dist > 150 && o.dist < 250 && o.kind !== 'car') && !obstacles.some(o => o.kind === 'car' && o.dist > 150 && o.dist < 250 && (o.parked || o.speed < 3)) && !crossings.some(c => Math.abs(c.dist - 205) < 45 + c.half) && !G.st) { spawnWreck(lanes[0]); G.nextRowAt = G.dist + 30; return; }   /* an accident: one lane blocked, the rest clear */
@@ -1923,6 +1930,7 @@
   function rangeText(){ if (CAR.cart) return '—'; const v = Math.abs(G.speed); let rate, sp; if (v > 3 && G.rate > .05) { rate = G.rate; sp = v; } else { const vv = Math.min(1, (60/3.6)/MAX_SPEED); sp = 60/3.6; rate = (CAR.fuelMul || 1)*(RATE_IDLE + .3 + 2.8*Math.pow(1 - vv, 1.5) + .9*Math.pow(vv, 1.6)); } const km = G.fuel/rate*sp/1000; return (km < 10 ? km.toFixed(1) : Math.round(km)) + ' км'; }   /* how far the tank takes you: at the current burn when moving, otherwise at a 60 km/h cruise */
   function stationText(){ const d = G.st ? G.st.dist : G.fork ? G.fork.dist + 228 : null; if (d === null) return 'не видно'; if (d < -20) return 'проехали'; return d < 1000 ? Math.max(0, Math.round(d/10)*10) + ' м' : (d/1000).toFixed(1) + ' км'; }
   function updateHud(){
+    if (CAR.cart) { const st = G.stam === undefined ? 1 : G.stam; $('fuelVal').textContent = Math.round(st*100) + '%'; $('fuelVal').classList.toggle('low', st < .25); $('stVal').textContent = stationText(); $('rateVal').textContent = ''; const fill = $('fuelFill'); fill.style.width = (st*100) + '%'; fill.className = st < .25 ? 'low' : st < .5 ? 'mid' : ''; return; }
     $('fuelVal').textContent = rangeText(); $('fuelVal').classList.toggle('low', G.fuel < 30); $('stVal').textContent = stationText();
     $('rateVal').textContent = '×' + G.rate.toFixed(1); $('rateFill').style.width = Math.min(100, G.rate/3.5*100) + '%';
     const fill = $('fuelFill'); fill.style.width = (G.fuel/G.maxFuel*100) + '%'; fill.className = G.fuel < 30 ? 'low' : G.fuel < 75 ? 'mid' : '';
@@ -2031,11 +2039,11 @@
         if (z0 !== undefined) { st.arriveT = rand(10, 18); const d = pick(DRIVERS), m = makeCar(d.car.color, d.car.truck, d.car.taxi); m.position.set(4*side, 0, z0); st.group.add(m); st.q.push({kind:'car', mesh:m, z:z0, x:4*side, halfL:m.userData.halfL, d, waiting:null, arriving:true}); } else st.arriveT = 3;
       }
     }
-    const canFill = s.type === 'queue' || s.type === 'quiet' || s.type === 'service';
+    const canFill = (s.type === 'queue' || s.type === 'quiet' || s.type === 'service') && !CAR.cart;   /* a horse has no business in a petrol queue */
     // ---- the pump ----
     const head = cars[0];
     const playerAtPump = Math.abs(G.x - laneX) < 2.0 && Math.abs(G.speed) < 1 && pz > -6 && pz < 7.5 && (!head || head.z > pz + 1);   /* anywhere along the island, roughly in the lane, and standing still: that is at the pump */
-    if (s.type === 'service' && playerAtPump) {   /* Tolyan works by the stage for as long as you stand there: each one costs its litres, and you can drive off whenever */
+    if (s.type === 'service' && playerAtPump && !CAR.cart) {   /* Tolyan works by the stage for as long as you stand there: each one costs its litres, and you can drive off whenever */
       if (G.damage <= 0) { if (!st.told) { st.told = true; announce('КУЗОВ ЦЕЛ', '', 1300, 'чинить нечего, поезжай'); } st.filling = 0; }
       else if (G.fuel < s.price + 3) { if (!st.told) { st.told = true; sfx.empty(); announce('НЕЧЕМ ПЛАТИТЬ', 'bad', 1500, 'Толян берёт бензином, нужно ' + s.price + ' литров'); } st.filling = 0; }
       else { st.filling += dt; if (st.group.userData.mech) st.group.userData.mech.position.y = Math.abs(Math.sin(G.time*6))*.08; if (st.filling >= s.per) { st.filling = 0; G.fuel = Math.max(1, G.fuel - s.price); repairCar(1); sfx.fuel(); flash('.25', '#7ad37a'); announce(G.damage > 0 ? 'СТУПЕНЬ ПОДЛАТАНА' : 'КУЗОВ ЦЕЛ', 'good', 1200, 'минус ' + s.price + ' литров' + (G.damage > 0 ? ', стой дальше или поезжай' : ', поезжай')); if (G.damage <= 0) st.told = true; prompt(drivePrompt()); } }
@@ -2124,7 +2132,9 @@
       if (m === 'drive') {
         const turning = roundabouts.some(rb => G.dist > rb.s0 - 8 && G.dist < rbEndS(rb) + 3);
         if (turning && G.speed > 8.5) G.speed = Math.max(8.5, G.speed - 12*dt);
-        if (CAR.cart) { const target = held.up ? MAX_SPEED : 0; if (held.down) G.speed = Math.max(-1.5, G.speed - (G.speed > 0 ? 6 : 2)*dt); else if (G.speed < target) G.speed = Math.min(target, G.speed + 2.6*dt); else G.speed = Math.max(target, G.speed - 1.4*dt); G.whipDue = (G.whipDue || 0) - dt; if ((held.up || G.speed > 2) && G.whipDue <= 0) { G.whipDue = .7 + Math.random()*.4; whip(); } }   /* the horse drives like a car: hold the arrow and the driver does the whipping himself */
+        if (CAR.cart) { const u = Math.abs(G.speed)/MAX_SPEED; G.stam = Math.max(0, Math.min(1, (G.stam === undefined ? 1 : G.stam) + (u < .05 ? .05 : .06*(.45 - u))*dt));   /* a gallop burns her wind in half a minute, a walk or a stop brings it back */
+          if (G.stam <= 0 && !G.tired) { G.tired = true; sfx.snort(); setTimeout(() => sfx.snort(), 500); announce('ЛОШАДЬ ВЫДОХЛАСЬ', 'bad', 1500, 'стоит, пока не отдышится'); } else if (G.tired && G.stam >= .35) { G.tired = false; sfx.neigh(); announce('ОТДЫШАЛАСЬ', 'good', 1100, ''); }
+          const cap = G.tired ? 0 : MAX_SPEED*(.75 + .25*Math.min(1, G.stam/.2));   /* she flags a little near the end, then stops dead */ const target = held.up ? cap : 0; if (G.tired) G.speed = Math.max(0, G.speed - 3*dt); else if (held.down) G.speed = Math.max(-1.5, G.speed - (G.speed > 0 ? 6 : 2)*dt); else if (G.speed < target) G.speed = Math.min(target, G.speed + 2.6*dt); else G.speed = Math.max(target, G.speed - 1.4*dt); G.whipDue = (G.whipDue || 0) - dt; if ((held.up || G.speed > 2) && !G.tired && G.whipDue <= 0) { G.whipDue = .7 + Math.random()*.4; whip(); } }   /* the horse drives like a car: hold the arrow and the driver does the whipping himself */
         else if (held.up && !G.empty) { const vv = Math.max(0, G.speed)/MAX_SPEED; G.speed = Math.min(turning ? 8.5 : MAX_SPEED, G.speed + (G.speed < 0 ? 6 : (1.1 + 4.8*(1 - vv))*CAR.acc)*dt); }   // 0-100 in about 10 s
         else if (G.empty && !held.down) G.speed = G.speed > 0 ? Math.max(0, G.speed - 1.6*dt) : Math.min(0, G.speed + 1.6*dt);
         else if (held.down) G.speed = Math.max(-3, G.speed - (G.speed > 0 ? 16*(1 - .45*(G.skid || 0)) : 4)*dt);
@@ -2148,6 +2158,11 @@
         G.slideV += (Math.sin(G.head + G.yawExtra*.8)*Math.abs(G.speed) - G.slideV)*Math.min(1, dt*settle);
         G.x += G.slideV*dt;
         G.hitCool = Math.max(0, G.hitCool - dt); G.eventTimer -= dt;
+        G.chaseDue = (G.chaseDue === undefined ? rand(6, 12) : G.chaseDue - dt);
+        if (G.chaseDue <= 0 && !obstacles.some(o => o.chaser) && !G.st && !G.fork && G.speed > -.5) { G.chaseDue = rand(CAR.cart ? 9 : 14, CAR.cart ? 16 : 26)*Math.max(.35, 1 - G.dist/5000);   /* the further you get, the more of them */   /* somebody in a hurry: a car comes up fast from behind, a second of horn and flashing lights, then it is past. Or into you. */
+          const lane = Math.random() < .5 ? LANES.reduce((b, l) => Math.abs(l - G.x) < Math.abs(b - G.x) ? l : b, LANES[0]) : pick(LANES);
+          const cm = makeCar(pick(trafficColors), false); world.add(cm); const beam = new THREE.Mesh(new THREE.PlaneGeometry(3.4, 46), new THREE.MeshBasicMaterial({color:col(0xfff4d0), transparent:true, opacity:.2, blending:THREE.AdditiveBlending, depthWrite:false})); beam.rotation.x = -Math.PI/2; beam.visible = false; world.add(beam);
+          obstacles.push({mesh:cm, kind:'car', chaser:true, beam, warned:false, speed:Math.max(24, Math.abs(G.speed) + 20), base:Math.max(24, Math.abs(G.speed) + 20), halfL:cm.userData.halfL, halfW:.98, dist:-75, lat:lane, yaw:0}); }
         if (!G.fork && !G.st && G.eventTimer <= 0 && !crossings.some(c => c.dist > 80) && !(G.dist < (G.ruinUntil || 0) + 80)) spawnFork();   /* no station in the middle of the holes */
         { const set = biomeAt(G.dist + 190) === 'steppe' ? [-2.6, 2.6, -2.6] : [-4, 0, 4]; LANES[0] = set[0]; LANES[1] = set[1]; LANES[2] = set[2]; }
         farCity.visible = biomeAt(G.dist) === 'city'; farMount.visible = biomeAt(G.dist) === 'forest';
@@ -2173,7 +2188,8 @@
           if ((rbLeaveS(rb, i) - G.dist < 15 && held.right) || i > 7) { rb.exit = i; announce('СЪЕЗД', 'good', 900, ['направо', 'прямо', 'налево', 'обратно'][(i - 1) % 4]); }
         }
         G.busTimer = (G.busTimer === undefined ? 14 : G.busTimer - dt); if (G.busTimer <= 0 && !G.st && biomeAt(G.dist + 200) === 'city' && G.speed > 1 && !obstacles.some(o => (o.kind === 'car' && Math.abs(o.lat - 4) < 2.2 && o.dist > 160) || (o.kind === 'ramp' && o.dist > -20))) { G.busTimer = rand(22, 40); const m = makeTrolleybus(); world.add(m); obstacles.push({mesh:m, kind:'car', bus:true, speed:11, base:11, halfL:m.userData.halfL, halfW:1.25, dist:200, lat:4, yaw:0}); }
-        if (CAR.cart && engineGain) { engineGain.gain.setTargetAtTime(0, AC.currentTime, .1); G.hoofT = (G.hoofT || 0) + Math.abs(G.speed)*dt; if (G.hoofT > 1.1) { G.hoofT = 0; if (Math.abs(G.speed) > .4) thud(.05, 700, .22); } }
+        if (CAR.cart && engineGain) { engineGain.gain.setTargetAtTime(0, AC.currentTime, .1); G.hoofT = (G.hoofT || 0) + Math.abs(G.speed)*dt; if (G.hoofT > .55) { G.hoofT = 0; G.hoofN = !G.hoofN; if (Math.abs(G.speed) > .4) { if (G.hoofN) { thud(.04, 1400, .22); tone(1100, 700, .035, 'triangle', .08); } else thud(.06, 650, .28); } }   /* clip, clop */
+          G.neighDue = (G.neighDue === undefined ? rand(8, 20) : G.neighDue - dt); if (G.neighDue <= 0) { G.neighDue = rand(25, 50); sfx.neigh(); } }
         if (engineGain && !G.empty && !CAR.cart) { const v = Math.abs(G.speed)/MAX_SPEED; engineGain.gain.setTargetAtTime(.2 + v*.16, AC.currentTime, .1); if (engine) engine.playbackRate.setTargetAtTime(.95 + v*1.05 + (held.up ? .05 : 0), AC.currentTime, .12); engineLp.frequency.setTargetAtTime(500 + v*1800, AC.currentTime, .15); }
         if (cityGain) cityGain.gain.setTargetAtTime(.16 - Math.min(1, Math.abs(G.speed)/MAX_SPEED)*.07, AC.currentTime, .3);
         if (roadGain) { const v = Math.min(1, Math.abs(G.speed)/MAX_SPEED); roadGain.gain.setTargetAtTime(Math.pow(v, .7)*.42*(CAR.cart ? .35 : 1), AC.currentTime, .15); roadLp.frequency.setTargetAtTime(350 + v*2600, AC.currentTime, .2); if (road) road.playbackRate.setTargetAtTime(.85 + v*.4, AC.currentTime, .2); }
@@ -2225,21 +2241,22 @@
         const P = player.userData; P.phase = (P.phase || 0) + Math.abs(G.speed)*dt*2.2; const amp = Math.min(1, Math.abs(G.speed)/2)*.55;
         P.legs.forEach((lg, i) => lg.rotation.x = Math.sin(P.phase + (i % 2 ? Math.PI : 0) + (i > 1 ? .6 : 0))*amp);
         if (P.head) {   /* a live head: it nods with the gait, looks into the turn, and between times glances about, drops to sniff the road, tosses and shakes; the ears flick on their own */
-          const H = P.head, hg = P.hg || (P.hg = {t:0, dur:0, kind:'none', pitch:0, yaw:0}), mv = Math.abs(G.speed) > 1.5; hg.t += dt;
+          const H = P.head, hg = P.hg || (P.hg = {t:0, dur:0, kind:'none', pitch:0, yaw:0}), mv = Math.abs(G.speed) > 1.5; hg.t += dt; if (G.tired && hg.kind !== 'tired') { hg.kind = 'tired'; hg.dur = 1e9; hg.pitch = -.6; hg.yaw = 0; } else if (!G.tired && hg.kind === 'tired') hg.dur = 0;   /* blown: head hung low until she gets her wind back */
           if (hg.t > hg.dur) { const r = Math.random(); hg.t = 0;
             if (r < .35) { hg.kind = 'none'; hg.dur = rand(1.2, 3.5); hg.pitch = 0; hg.yaw = 0; }
             else if (r < .6) { hg.kind = 'look'; hg.dur = rand(1, 2.4); hg.yaw = (Math.random() < .5 ? -1 : 1)*rand(.3, .7)*(mv ? .5 : 1); hg.pitch = rand(-.15, .1); }
             else if (r < .75 && !mv) { hg.kind = 'graze'; hg.dur = rand(1.5, 3); hg.pitch = -.6; hg.yaw = rand(-.2, .2); }
             else if (r < .9) { hg.kind = 'toss'; hg.dur = .6; hg.pitch = 0; hg.yaw = 0; }
-            else { hg.kind = 'shake'; hg.dur = .7; hg.pitch = .08; hg.yaw = 0; } }
+            else { hg.kind = 'shake'; hg.dur = .7; hg.pitch = .08; hg.yaw = 0; if (Math.random() < .6) sfx.snort(); }
+            if (hg.kind === 'toss' && Math.random() < .3) sfx.neigh(); }
           let tp = hg.pitch, ty = hg.yaw; if (hg.kind === 'toss') tp = .5*Math.sin(hg.t/hg.dur*Math.PI); if (hg.kind === 'shake') ty = Math.sin(hg.t*38)*.28*(1 - hg.t/hg.dur); ty += -(G.head || 0)*.9;
           const quick = hg.kind === 'toss' || hg.kind === 'shake'; P.hPitch = (P.hPitch || 0) + (tp - (P.hPitch || 0))*Math.min(1, dt*(quick ? 14 : 4)); P.hYawH = (P.hYawH || 0) + (ty - (P.hYawH || 0))*Math.min(1, dt*(quick ? 20 : 4));
           H.rotation.x = Math.sin(P.phase*2)*.14*amp + Math.sin(P.phase)*.05*amp + P.hPitch; H.rotation.y = P.hYawH;
           if (P.ears) for (const e of P.ears) { if (Math.random() < dt*.8) e.userData.f = .2; e.userData.f = Math.max(0, (e.userData.f || 0) - dt); e.rotation.z = e.userData.s*(.15 + (e.userData.f > 0 ? Math.sin(e.userData.f/.2*Math.PI)*.8 : 0)); } }
         if (P.hTail) P.hTail.rotation.z = Math.sin(G.time*3)*.3;
         if (P.cartWheels) for (const wg of P.cartWheels) wg.rotation.x -= G.speed*dt/.72;
-        if (P.horse) { const want = -(G.head || 0)*Math.max(-1, Math.min(1, G.speed/3))*1.25 + ((G.headVis || 0) - (G.yawExtra || 0)); P.hYaw = (P.hYaw || 0) + ((want + Math.sin(P.phase*.5)*.03*amp) - (P.hYaw || 0))*Math.min(1, dt*12);   /* the horse turns first; the cart, hanging off the shafts, comes round after it */ P.horse.rotation.y = P.hYaw; P.horse.position.y = Math.abs(Math.sin(P.phase))*.08*amp; P.horse.rotation.z = Math.sin(P.phase)*.05*amp; P.horse.rotation.x = Math.sin(P.phase*2 + 1)*.03*amp + (G.pvy || 0)*.02; }
-        if (P.whipArm) { G.whipT = Math.max(0, (G.whipT || 0) - dt); P.whipArm.rotation.x = -.3 - Math.sin(Math.min(1, G.whipT/.35)*Math.PI)*1.2; }
+        if (P.horse) { const want = -(G.head || 0)*Math.max(-1, Math.min(1, G.speed/3))*1.25 + ((G.headVis || 0) - (G.yawExtra || 0)); P.hYaw = (P.hYaw || 0) + ((want + Math.sin(P.phase*.5)*.03*amp) - (P.hYaw || 0))*Math.min(1, dt*12);   /* the horse turns first; the cart, hanging off the shafts, comes round after it */ P.horse.rotation.y = P.hYaw; P.horse.position.y = Math.abs(Math.sin(P.phase))*.08*amp + (G.tired ? Math.abs(Math.sin(G.time*5))*.025 : 0); P.horse.rotation.z = Math.sin(P.phase)*.05*amp; P.horse.rotation.x = Math.sin(P.phase*2 + 1)*.03*amp + (G.pvy || 0)*.02; }
+        if (P.whipArm) { G.whipT = Math.max(0, (G.whipT || 0) - dt); P.whipArm.rotation.x = -.3 - Math.sin(Math.min(1, G.whipT/.35)*Math.PI)*.75;   /* the crack lands on the rump, not on the road */ }
         if (m === 'drive' && Math.abs(G.speed) > .5 && Math.random() < dt*.07) for (let q = 0; q < 3; q++) { const d = new THREE.Mesh(new THREE.SphereGeometry(.11, 6, 5), dungMat); d.position.set(player.position.x + rand(-.15, .15), .5, -2.2 + rand(-.1, .1)); scene.add(d); debris.push({m:d, v:new THREE.Vector3(rand(-.3, .3), -1, 0), av:new THREE.Vector3(rand(-2, 2), 0, rand(-2, 2)), t:0, life:14}); }
       }
       if (player.userData.fridge) {
@@ -2303,6 +2320,10 @@
       for (let i = obstacles.length - 1; i >= 0; i--) {
         const o = obstacles[i], om = o.mesh;
         if (o.roller && m === 'drive') { o.speed = 0; }
+        else if (o.chaser && m === 'drive') { const rel = o.speed - G.speed, tta = rel > .5 ? -o.dist/rel : 9;
+          if (!o.warned && tta < Math.max(.85, 1.3 - G.dist/8000)) {   /* the warning gets shorter the further you are, but never under .85 s: enough to change lanes */ o.warned = true; o.flashT = 0; sfx.horn(); setTimeout(() => sfx.horn(), 450); }
+          if (o.warned) { o.flashT = (o.flashT || 0) + dt; o.beam.visible = o.dist < 3 && (Math.floor(o.flashT*9) % 2 === 0); o.beam.userData.y0 = 0; place(o.beam, o.dist + o.halfL + 23, o.lat, 0); o.beam.position.y += .07; }
+          if (o.dist > 6) { o.chaser = false; world.remove(o.beam); o.base = 14 + Math.random()*3; }   /* past you: just another car in the traffic now */ }
         else if (o.kind === 'car' && m === 'drive') {
           // keep distance to the car ahead in the same lane, and stop at a red light
           if (o.base === undefined) o.base = o.speed;
@@ -2325,7 +2346,7 @@
         }
         o.dist -= (G.speed - (m === 'drive' ? o.speed : 0))*dt;
         if (o.kind === 'cross') { o.lat += o.vx*dt; if (Math.abs(o.lat) > 70) { world.remove(om); obstacles.splice(i, 1); continue; } }
-        if (o.dist + o.halfL < -16 || o.dist > 300) { world.remove(om); obstacles.splice(i, 1); continue; }
+        if ((o.dist + o.halfL < -16 && !o.chaser) || o.dist > 300) { world.remove(om); if (o.beam) world.remove(o.beam); obstacles.splice(i, 1); continue; }
         if (o.kind === 'milled') { if (!o.ghost) updateMilled(o); updateWorkers(o, dt); } else { if (o.kind === 'car') om.userData.y0 = crossings.some(c => Math.abs(o.dist - c.dist) < c.half + 3) ? .1 : 0; place(om, o.dist, o.lat, o.yaw); }   /* traffic rides on the junction plate too */
         if (o.wreck) o.hz.emissiveIntensity = (Math.floor(G.time*1.7) % 2) ? 2.4 : .15;
         if (o.bike && om.userData.thighs) { o.ph = (o.ph || 0) + o.speed*dt*2.6; for (let q = 0; q < 2; q++) { const a = o.ph + q*Math.PI; om.userData.thighs[q].rotation.x = 1.15 - Math.sin(a)*.42; om.userData.shins[q].rotation.x = -.95 + Math.sin(a)*.5 - Math.cos(a)*.15; } }
@@ -2336,6 +2357,7 @@
         if ((CAR.over || G.onRoof || G.py > .8) && o.kind === 'car' && !o.bus && o.halfL <= 3 && !o.roller) continue;   /* the monster truck goes over cars, not into them; anyone airborne lands on them; lorries and buses still stop everyone */
         const ox = Math.abs(o.lat - G.x), oz = Math.abs(o.dist);
         if (ox < o.halfW + .85 && oz < o.halfL + 2.2) {
+          if (o.chaser && o.dist < 0) { o.chaser = false; world.remove(o.beam); o.speed = Math.max(0, G.speed) + 2; o.base = 14; G.speed += CAR.cart ? 2 : 5; G.kickF = 3; crash(1); continue; }   /* rear-ended by the one in a hurry */
           if (o.kind === 'car' && o.dist < -1.0 && !o.parked && !o.bus) { o.dist = Math.min(o.dist, -(o.halfL + 2.2) - .2); o.speed = Math.min(o.speed, Math.max(0, G.speed)); continue; }   /* a car touching your rear just sits on your bumper */
           if (o.kind === 'cone') { world.remove(om); obstacles.splice(i, 1); const wp = om.position.clone(); om.position.copy(wp); om.rotation.set(0, 0, 0); scene.add(om); const sd = Math.sign(o.lat - G.x) || (Math.random() < .5 ? -1 : 1); launch(om, new THREE.Vector3(sd*rand(.5, 2.5), rand(9, 12), rand(7, 10))); if (G.hitCool <= 0) { G.speed *= .7; G.shake = .4; G.hitCool = .4; sfx.cone(); } continue; }
           else if (o.kind === 'bump') { if (!o.hit) { o.hit = true; if (G.py <= 0) { G.pvy = 3.6*CAR.tough; G.py = .01; } G.kickF = -3.2; G.rollV += (Math.random() < .5 ? -1 : 1)*rand(2.2, 3.4)*Math.max(.35, CAR.tough); G.shake = Math.max(G.shake, .3*Math.max(.3, CAR.tough)); sfx.bump(); } }
