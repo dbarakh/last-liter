@@ -1559,7 +1559,7 @@
     const lat = LANES[li], hz = new THREE.MeshStandardMaterial({color:col(0xffa020), emissive:col(0xff8a10), emissiveIntensity:2.2});
     const a = makeCar(pick(trafficColors), false); world.add(a); addHazards(a, hz); obstacles.push({mesh:a, kind:'car', parked:true, wreck:true, hz, speed:0, base:0, halfL:a.userData.halfL, halfW:a.userData.halfW, dist:206, lat:lat + .2, yaw:.1});
     const b = makeCar(pick(trafficColors), false); world.add(b); addHazards(b, hz); obstacles.push({mesh:b, kind:'car', parked:true, wreck:true, hz, speed:0, base:0, halfL:b.userData.halfL, halfW:b.userData.halfW, dist:206 - a.userData.halfL - b.userData.halfL + .5, lat:lat - .3, yaw:-.22});
-    const t = makeTriangle(); t.scale.setScalar(2); world.add(t); obstacles.push({mesh:t, kind:'cone', soft:true, speed:0, halfL:.4, halfW:.4, dist:206 - a.userData.halfL - 2*b.userData.halfL - 14, lat, yaw:0});
+    const t = makeTriangle(); t.scale.setScalar(1.4); world.add(t); obstacles.push({mesh:t, kind:'cone', soft:true, speed:0, halfL:.3, halfW:.3, dist:206 - a.userData.halfL - 2*b.userData.halfL - 14, lat, yaw:0});
   }
   function makeHump(){ const g = new THREE.Group(); const c = new THREE.Mesh(new THREE.CylinderGeometry(.14, .14, 13.2, 14), humpMat); c.rotation.z = Math.PI/2; c.position.y = .0; g.add(c); for (let i = 0; i < 8; i++) { const b = new THREE.Mesh(new THREE.CylinderGeometry(.145, .145, .9, 14), humpYel); b.rotation.z = Math.PI/2; b.position.set(-5.6 + i*1.6, 0, 0); g.add(b); } return g; }
   const dungMat = std(0x4a3118, {roughness:1}), sparkMat = glow(0xffd166, 2), shardMat = std(0x9fb4c4, {roughness:.1, metalness:.6, transparent:true, opacity:.75});
