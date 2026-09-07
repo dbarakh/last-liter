@@ -90,6 +90,8 @@
   .go:active{transform:translateY(4px);box-shadow:0 2px 0 #b8722a;}
   .newbest{display:inline-block;background:var(--accent);color:#2b1608;font-weight:700;font-size:11px;letter-spacing:.12em;text-transform:uppercase;padding:4px 8px;border-radius:4px;margin-left:8px;vertical-align:middle;}
   @media (max-width:640px){ .result{grid-template-columns:repeat(2,auto);} }
+  #lb{margin:4px 0 18px;} #lbForm{display:flex;gap:8px;} #lbName{flex:1;min-width:0;background:rgba(0,0,0,.25);border:1px solid var(--line);border-radius:8px;color:var(--ink);font:500 15px var(--body);padding:10px 12px;outline:none;} #lbName:focus{border-color:var(--accent);} #lbSend{background:var(--accent);color:#2b1608;border:0;border-radius:8px;font:700 13px var(--body);letter-spacing:.06em;text-transform:uppercase;padding:0 16px;cursor:pointer;} #lbSend:disabled{opacity:.5;cursor:default;}
+  #lbMsg{font-size:12px;color:var(--ink-dim);margin-top:6px;min-height:14px;} #lbList{list-style:none;margin:8px 0 0;padding:0;font-size:13px;line-height:1.35;} #lbList li{display:grid;grid-template-columns:22px 1fr auto auto;gap:8px;padding:3px 6px;border-radius:6px;} #lbList li.me{background:rgba(255,179,71,.18);} #lbList li span:first-child{color:var(--ink-dim);} #lbList li b{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;} #lbList li i{font-style:normal;color:var(--ink-dim);} #lbList li em{font-style:normal;color:var(--accent);font-family:var(--display);}
   #rotate{display:none;position:fixed;inset:0;z-index:50;background:var(--bg,#1a1016);color:var(--ink);align-items:center;justify-content:center;text-align:center;padding:30px;font:500 clamp(18px,5vw,26px)/1.4 var(--body,system-ui);}
   #rotate i{display:block;font-style:normal;font-size:64px;margin-bottom:14px;}
   @media (pointer:coarse) and (orientation:portrait){ #rotate{display:flex;} }
@@ -158,6 +160,11 @@
         <div class="stat"><span class="lbl">Драк выиграл</span><span class="val" id="rFights">0</span></div>
       </div>
       <p id="overNote"></p>
+      <div id="lb" hidden>
+        <form id="lbForm" autocomplete="off"><input id="lbName" maxlength="16" placeholder="Твоё имя" autocomplete="nickname" spellcheck="false"><button type="submit" id="lbSend">Записать</button></form>
+        <div id="lbMsg"></div>
+        <ol id="lbList"></ol>
+      </div>
       <button class="go" id="againBtn" type="button">Ещё раз</button>
     </div>
   </div>
@@ -1550,6 +1557,23 @@ const SQUEAL_B64 = 'SUQzBAAAAAAAIlRTU0UAAAAOAAADTGF2ZjYyLjMuMTAwAAAAAAAAAAAAAAD/
     updateRep(); updateDmgHud(); updateHud(); setPad('drive'); prompt(drivePrompt());
     if (CAR.cart) announce('НО!', 'good', 1000, ''); else announce('ГАЗУЙ', 'good', 1200, 'в баке на три минуты холостых');
   }
+  // ---- leaderboard: a Supabase table read and written with the public key; nothing else on the server ----
+  const LB_URL = 'https://hflezrtvwasxiexjhvjh.supabase.co', LB_KEY = 'sb_publishable_kmCZJfe36vH7-fKh45jPIQ_Rg9HYieY';
+  const lbOn = () => LB_KEY && !LB_KEY.startsWith('PASTE');
+  function lbReqSafe(path, opts){ const h = Object.assign({apikey:LB_KEY, Authorization:'Bearer ' + LB_KEY, 'Content-Type':'application/json'}, (opts && opts.headers) || {}); const o = Object.assign({}, opts || {}); o.headers = h; return fetch(LB_URL + '/rest/v1/' + path, o).then(r => { if (!r.ok) throw new Error('lb ' + r.status); return (r.status === 201 || r.status === 204) ? null : r.json(); }); }
+  function lbRender(rows, me){ const ol = $('lbList'); ol.innerHTML = ''; rows.forEach((r, i) => { const li = document.createElement('li'); if (me && r.name === me.name && Math.abs(r.km - me.km) < .005) li.className = 'me'; li.innerHTML = '<span>' + (i + 1) + '</span><b></b><i>' + (r.vehicle === 'cart' ? 'телега' : 'авто') + '</i><em>' + (+r.km).toFixed(2) + ' км</em>'; li.querySelector('b').textContent = r.name; ol.appendChild(li); }); }
+  function lbLoad(me){ return lbReqSafe('scores?select=name,km,vehicle&order=km.desc&limit=10').then(rows => lbRender(rows, me)).catch(() => { $('lbMsg').textContent = 'таблица недоступна'; }); }
+  function lbShow(){ if (!lbOn()) return; const box = $('lb'); box.hidden = false; $('lbMsg').textContent = ''; $('lbList').innerHTML = ''; const f = $('lbForm'); f.hidden = false; $('lbSend').disabled = false; try { $('lbName').value = localStorage.getItem('ll-name') || ''; } catch(e){} G.lbSent = false; lbLoad(); }
+  $('lbForm').addEventListener('submit', e => {
+    e.preventDefault(); if (G.lbSent) return; const name = $('lbName').value.trim().slice(0, 16), kmv = +(Math.max(0, G.dist)/1000).toFixed(2);
+    if (!name) { $('lbMsg').textContent = 'напиши имя'; $('lbName').focus(); return; }
+    if (kmv < .1) { $('lbMsg').textContent = 'меньше ста метров в таблицу не идёт'; return; }
+    let last = 0; try { last = +localStorage.getItem('ll-lb-last') || 0; } catch(e){} if (Date.now() - last < 30000) { $('lbMsg').textContent = 'подожди полминуты'; return; }
+    G.lbSent = true; $('lbSend').disabled = true; $('lbMsg').textContent = 'записываю…'; try { localStorage.setItem('ll-name', name); } catch(e){}
+    const me = {name, km:kmv, vehicle:CAR.cart ? 'cart' : 'car'};
+    lbReqSafe('scores', {method:'POST', body:JSON.stringify(me), headers:{Prefer:'return=minimal'}}).then(() => { try { localStorage.setItem('ll-lb-last', String(Date.now())); } catch(e){} $('lbMsg').textContent = 'записано'; $('lbForm').hidden = true; return lbLoad(me); }).catch(() => { G.lbSent = false; $('lbSend').disabled = false; $('lbMsg').textContent = 'не записалось, попробуй ещё'; });
+  });
+  $('lbName').addEventListener('keydown', e => e.stopPropagation());   /* typing a name must not steer the wreck */
   function gameOver(reason){
     G.mode = 'over'; G.overT = 0; engineOff(); if (reason === 'wreck') { G.damage = 10; sfx.empty(); }
     announce(reason === 'wreck' ? 'ПОТРАЧЕНО' : 'ФИНИШ', reason === 'wreck' ? 'bad' : '', 2000, 'итог ' + km(G.dist));
@@ -1558,7 +1582,7 @@ const SQUEAL_B64 = 'SUQzBAAAAAAAIlRTU0UAAAAOAAADTGF2ZjYyLjMuMTAwAAAAAAAAAAAAAAD/
     $('overTitle').textContent = reason === 'wreck' ? 'Потрачено' : G.fills === 0 ? 'Не дотянул до первой колонки' : G.fills < 3 ? 'Мотор заглох' : 'Долго держался';
     $('overCard').querySelector('.eyebrow').textContent = reason === 'wreck' ? 'Кузов не выдержал' : 'Бак пуст';
     $('overNote').innerHTML = 'Рекорд <b>' + km(best) + '</b>' + (isBest ? '<span class="newbest">новый рекорд</span>' : '') + (G.rep >= 5 ? ' · Весь город тебя помнит.' : '');
-    setTimeout(() => { $('startCard').hidden = true; $('overCard').hidden = false; $('overlay').hidden = false; $('againBtn').focus(); }, 2200);
+    setTimeout(() => { $('startCard').hidden = true; $('overCard').hidden = false; $('overlay').hidden = false; lbShow(); $('againBtn').focus(); }, 2200);
   }
 
   // ---- damage: every crash peels a layer off the car ----
