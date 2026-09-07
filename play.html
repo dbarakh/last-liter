@@ -2334,7 +2334,7 @@ const SQUEAL_B64 = 'SUQzBAAAAAAAIlRTU0UAAAAOAAADTGF2ZjYyLjMuMTAwAAAAAAAAAAAAAAD/
           if (o.phase === 'go') o.speed += (Math.abs(G.speed) + 22 - o.speed)*Math.min(1, dt*3);
           else { const want = Math.min(Math.max(0, G.speed) + 22, Math.max(0, G.speed) + Math.max(0, gapD - o.dist)*1.4); o.speed += (want - o.speed)*Math.min(1, dt*(want < o.speed ? 6 : 2.5)); if (o.dist > gapD + .8) o.dist = gapD + .8;
             if (o.dist > gapD - 2.5) { o.tail = (o.tail || 0) + dt; if (o.tail > (o.honkN || 0)*.75) { o.honkN = (o.honkN || 0) + 1; sfx.horn(); } if (o.tail > (CAR.cart ? 2.6 : 2.2)) { o.phase = 'go'; sfx.hornLong(); } } }
-          if (o.tail > 0) { o.flashT = (o.flashT || 0) + dt; o.beam.visible = o.dist < 3 && (Math.floor(o.flashT*9) % 2 === 0); o.beam.userData.y0 = 0; place(o.beam, o.dist + o.halfL + 23, o.lat, 0); o.beam.position.y += .07; }
+          o.beam.visible = false;   /* no light on the road: the horn is the warning */
           if (o.dist > 6) { o.chaser = false; world.remove(o.beam); o.base = 14 + Math.random()*3; }   /* past you: just another car in the traffic now */ }
         else if (o.kind === 'car' && m === 'drive') {
           // keep distance to the car ahead in the same lane, and stop at a red light
