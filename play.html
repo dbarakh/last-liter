@@ -1508,7 +1508,7 @@
   function clearObstacles(all){ for (let i = obstacles.length - 1; i >= 0; i--) { const o = obstacles[i]; if (all || o.dist > -30) { world.remove(o.mesh); obstacles.splice(i, 1); } } }
   function removeStation(){ if (G.st) { for (const f of G.st.group.userData.fillers || []) if (f.e) { world.remove(f.e.m); const k = decor.indexOf(f.e); if (k >= 0) decor.splice(k, 1); } world.remove(G.st.group); G.st = null; $('board').style.display = 'none'; } }
   function removeFork(){ if (G.fork) { world.remove(G.fork.group); G.fork = null; } }
-  const PROMPT_DRIVE = '<kbd>↑</kbd> газ · <kbd>↓</kbd> тормоз · <kbd>←</kbd><kbd>→</kbd> руль · <kbd>V</kbd> вид · <kbd>Esc</kbd> меню', PROMPT_CART = '<kbd>↑</kbd> подстегнуть лошадь · <kbd>↓</kbd> тормоз · <kbd>←</kbd><kbd>→</kbd> руль · <kbd>V</kbd> вид · <kbd>Esc</kbd> меню';
+  const PROMPT_DRIVE = '<kbd>↑</kbd> газ · <kbd>↓</kbd> тормоз · <kbd>←</kbd><kbd>→</kbd> руль · <kbd>V</kbd> вид · <kbd>Esc</kbd> меню', PROMPT_CART = '<kbd>↑</kbd> ехать · <kbd>↓</kbd> тормоз · <kbd>←</kbd><kbd>→</kbd> руль · <kbd>V</kbd> вид · <kbd>Esc</kbd> меню';
   function drivePrompt(){ return CAR.cart ? PROMPT_CART : PROMPT_DRIVE; }
 
   function start(){
@@ -1857,7 +1857,7 @@
     G.turnOffer = null; G.turnHold = 0; G.head *= .3; G.slideTo = G.x*.6;
     announce(sign < 0 ? 'НАЛЕВО' : 'НАПРАВО', 'good', 900, 'новая улица'); prompt(drivePrompt());
   }
-  function whip(){ G.urge = Math.min(1.35, (G.urge || 0) + .42); G.whipT = .35; sfx.whip(); }
+  function whip(){ G.whipT = .35; sfx.whip(); }
   function cutIn(){
     const st = G.st, e = G.cutTarget; if (!st || !e) return; const pz = st.dist;
     e.z = Math.max(e.z, pz + PLAYER_HALF + e.halfL + .8); e.mesh.position.z = e.z; e.waiting = null;
@@ -1937,7 +1937,7 @@
     const L = $('padL'), R = $('padR'); L.innerHTML = ''; R.innerHTML = '';
     PADS[mode].forEach(([k, label, cls, side]) => {
       const b = document.createElement('button'); b.type = 'button'; b.className = 'pb ' + cls; b.textContent = label; b.dataset.k = k;
-      const down = e => { e.preventDefault(); audioInit(); if (k === 'up' && CAR.cart && G.mode === 'drive') whip(); press(k, true); try { b.setPointerCapture(e.pointerId); } catch(err){} };
+      const down = e => { e.preventDefault(); audioInit(); press(k, true); try { b.setPointerCapture(e.pointerId); } catch(err){} };
       const up = e => { e.preventDefault(); press(k, false); };
       b.addEventListener('pointerdown', down); b.addEventListener('pointerup', up); b.addEventListener('pointercancel', up); b.addEventListener('lostpointercapture', up); b.addEventListener('contextmenu', e => e.preventDefault());
       (side === 'L' ? L : R).appendChild(b);
@@ -1958,7 +1958,7 @@
     if (G.menu) return;
     if (e.code === 'KeyO' && !e.repeat) { freeCam(!FC.on); return; }
     const k = keyMap[e.code];
-    if (k) { e.preventDefault(); if (e.repeat) return; if (k === 'up' && CAR.cart && G.mode === 'drive') whip(); press(k, true); return; }   /* the horse answers the up arrow */
+    if (k) { e.preventDefault(); if (e.repeat) return; press(k, true); return; }
     if (e.code === 'Space' || e.code === 'Enter') {
       e.preventDefault();
       if (!$('overlay').hidden) { if (!(document.activeElement && document.activeElement.tagName === 'BUTTON' && document.activeElement.id !== 'mute')) start(); }
@@ -2123,7 +2123,7 @@
       if (m === 'drive') {
         const turning = roundabouts.some(rb => G.dist > rb.s0 - 8 && G.dist < rbEndS(rb) + 3);
         if (turning && G.speed > 8.5) G.speed = Math.max(8.5, G.speed - 12*dt);
-        if (CAR.cart) { G.urge = Math.max(0, (G.urge || 0) - dt*.32); const target = Math.min(1, G.urge)*MAX_SPEED; if (held.down) G.speed = Math.max(-1.5, G.speed - (G.speed > 0 ? 6 : 2)*dt); else if (G.speed < target) G.speed = Math.min(target, G.speed + 2.6*dt); else G.speed = Math.max(target, G.speed - 1.4*dt); }   /* the horse: keeps trotting only while you keep whipping */
+        if (CAR.cart) { const target = held.up ? MAX_SPEED : 0; if (held.down) G.speed = Math.max(-1.5, G.speed - (G.speed > 0 ? 6 : 2)*dt); else if (G.speed < target) G.speed = Math.min(target, G.speed + 2.6*dt); else G.speed = Math.max(target, G.speed - 1.4*dt); G.whipDue = (G.whipDue || 0) - dt; if (held.up && G.speed < MAX_SPEED - .3 && G.whipDue <= 0) { G.whipDue = .9 + Math.random()*.5; whip(); } }   /* the horse drives like a car: hold the arrow and the driver does the whipping himself */
         else if (held.up && !G.empty) { const vv = Math.max(0, G.speed)/MAX_SPEED; G.speed = Math.min(turning ? 8.5 : MAX_SPEED, G.speed + (G.speed < 0 ? 6 : (1.1 + 4.8*(1 - vv))*CAR.acc)*dt); }   // 0-100 in about 10 s
         else if (G.empty && !held.down) G.speed = G.speed > 0 ? Math.max(0, G.speed - 1.6*dt) : Math.min(0, G.speed + 1.6*dt);
         else if (held.down) G.speed = Math.max(-3, G.speed - (G.speed > 0 ? 16*(1 - .45*(G.skid || 0)) : 4)*dt);
