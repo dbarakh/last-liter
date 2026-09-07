@@ -1996,7 +1996,7 @@
     const canFill = s.type === 'queue' || s.type === 'quiet' || s.type === 'service';
     // ---- the pump ----
     const head = cars[0];
-    const playerAtPump = inLane && Math.abs(G.speed) < .4 && Math.abs(pz) < 2.6 && (!head || head.z > pz);
+    const playerAtPump = Math.abs(G.x - laneX) < 2.0 && Math.abs(G.speed) < 1 && pz > -6 && pz < 7.5 && (!head || head.z > pz + 1);   /* anywhere along the island, roughly in the lane, and standing still: that is at the pump */
     if (s.type === 'service' && playerAtPump && !st.filled) {
       if (G.damage <= 0) { st.filled = true; announce('КУЗОВ ЦЕЛ', '', 1300, 'чинить нечего, поезжай'); }
       else if (G.fuel < s.price + 5) { st.filled = true; sfx.empty(); announce('НЕЧЕМ ПЛАТИТЬ', 'bad', 1500, 'Толян берёт бензином, нужно ' + s.price + ' литров'); }
