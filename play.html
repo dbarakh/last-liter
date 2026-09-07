@@ -1116,7 +1116,7 @@
     const len = o.halfL*2;
     for (const w of o.workers) {
       w.t += dt; const wd = o.dist - o.halfL + w.u*len, wl = o.lat + w.off;
-      const near = G.mode === 'drive' && Math.abs(G.speed) > 2 && wd > -2 && wd < 2 + Math.abs(G.speed)*.3 && Math.abs(wl - G.x) < 3.2;
+      const near = G.mode === 'drive' && Math.abs(G.speed) > 2 && wd > -2 && wd < 1.5 + Math.abs(G.speed)*.25 && Math.abs(wl - G.x) < 3.0;   /* the same last quarter of a second as a pedestrian */
       if (near && !(w.dodge > 0)) { w.dodge = 1.5; w.away = Math.sign(wl - G.x) || (Math.random() < .5 ? -1 : 1); w.goal = null; w.off0 = w.off; w.offT = w.off + w.away*2.8; }   /* a leap of under three metres, not a flight across the works */   /* one leap sideways, headlong, then a moment on the ground */
       let moving = false;
       if (w.dodge > 0) { w.dodge -= dt; const jt = 1.5 - w.dodge, JT = .42; if (jt < JT) { const t = jt/JT; w.off = w.off0 + (w.offT - w.off0)*t; w.air = Math.sin(t*Math.PI)*.6; w.dive = 1; } else { w.off = w.offT; w.air = 0; w.dive = Math.max(0, 1 - (jt - JT)/.6); } moving = false; }
