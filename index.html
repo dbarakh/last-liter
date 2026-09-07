@@ -48,6 +48,7 @@
   .credits{position:relative;padding:0 clamp(16px,5vw,70px) 12px;font-size:11px;color:rgba(247,234,216,.45);line-height:1.5;}
   .credits a{color:inherit;}
   #top{position:absolute;right:clamp(20px,5vw,90px);top:50%;transform:translateY(-50%);width:min(420px,36vw);background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px 20px 16px;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);box-shadow:0 20px 60px rgba(0,0,0,.35);}
+  #top .all{display:block;margin-top:10px;text-align:right;color:var(--accent);text-decoration:none;font-size:13px;letter-spacing:.04em;}
   #top h3{margin:0 0 10px;font-size:14px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);font-weight:500;}
   #top ol{list-style:none;margin:0;padding:0;font-size:clamp(14px,1.2vw,17px);} #top li{display:grid;grid-template-columns:28px 1fr auto auto;gap:10px;align-items:center;padding:6px 8px;border-radius:8px;min-height:34px;} #top li:nth-child(odd){background:rgba(255,255,255,.04);} #top li span:first-child{color:var(--dim);font-weight:700;} #top li b{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;} #top li.empty b{color:rgba(247,234,216,.28);} #top li i{font-style:normal;color:var(--dim);font-size:.85em;} #top li em{font-style:normal;color:var(--accent);font-weight:700;font-variant-numeric:tabular-nums;} #top li:first-child span:first-child{color:var(--accent);}
   @media (max-width:900px){ #s1{overflow:auto;justify-content:flex-start;} #s1 .in{padding-top:clamp(120px,32vh,300px);} #top{position:relative;transform:none;width:auto;margin:0 clamp(16px,5vw,60px) 30px;} }
@@ -62,7 +63,7 @@
     <p class="lead">Бак почти пуст, впереди длинная дорога, на заправках очереди. Твоя задача: добыть бензин и уехать как можно дальше.</p>
     <button class="btn" id="toRules" type="button">Играть</button>
   </div>
-  <div id="top"><h3>Топ-10</h3><ol id="topList"></ol></div>
+  <div id="top"><h3>Топ-10</h3><ol id="topList"></ol><a class="all" href="board.html">Вся таблица →</a></div>
 </section>
 
 <section class="screen" id="s2" hidden>
