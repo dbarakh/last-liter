@@ -561,7 +561,7 @@
     for (const s of [-1, 1]) kh.box(.07, .07, 2.6, woodD, s*.45, .9, -2.4 + Z);   // shafts
     kh.box(.6, .62, 1.55, hide, 0, 1.32, -3.0 + Z); kh.box(.5, .4, .5, hide, 0, 1.2, -2.25 + Z); kh.box(.5, .45, .45, hide, 0, 1.25, -3.75 + Z);
     kh.box(.32, .8, .36, hide, 0, 1.75, -3.95 + Z, -.55);
-    { const head = new THREE.Group(); head.position.set(0, 2.05, -4.25 + Z); head.userData.part = 'horse'; horse.add(head); const hd = new THREE.Mesh(new THREE.BoxGeometry(.28, .32, .64), hide); hd.position.set(0, -.05, -.25); head.add(hd); const muzzle = new THREE.Mesh(new THREE.BoxGeometry(.22, .22, .3), std(0x4d3520)); muzzle.position.set(0, -.12, -.6); head.add(muzzle); for (const s of [-1, 1]) { const ear = new THREE.Mesh(new THREE.BoxGeometry(.07, .18, .06), hide); ear.position.set(s*.1, .2, -.05); head.add(ear); } const mn = new THREE.Mesh(new THREE.BoxGeometry(.1, .5, .3), mane); mn.position.set(0, .15, .2); mn.rotation.x = .5; head.add(mn); g.userData.head = head; }
+    { const head = new THREE.Group(); head.position.set(0, 2.05, -4.25 + Z); head.userData.part = 'horse'; horse.add(head); const hd = new THREE.Mesh(new THREE.BoxGeometry(.28, .32, .64), hide); hd.position.set(0, -.05, -.25); head.add(hd); const muzzle = new THREE.Mesh(new THREE.BoxGeometry(.22, .22, .3), std(0x4d3520)); muzzle.position.set(0, -.12, -.6); head.add(muzzle); const ears = []; for (const s of [-1, 1]) { const ear = new THREE.Mesh(new THREE.BoxGeometry(.07, .18, .06), hide); ear.position.set(s*.1, .2, -.05); ear.userData.s = s; head.add(ear); ears.push(ear); } g.userData.ears = ears; const mn = new THREE.Mesh(new THREE.BoxGeometry(.1, .5, .3), mane); mn.position.set(0, .15, .2); mn.rotation.x = .5; head.add(mn); g.userData.head = head; }
     kh.box(.12, .5, .22, mane, 0, 2.0, -3.8 + Z, -.55);
     { const tl = new THREE.Group(); tl.position.set(0, 1.5, -2.05 + Z); tl.userData.part = 'horse'; horse.add(tl); const t = new THREE.Mesh(new THREE.BoxGeometry(.12, .75, .12), mane); t.position.set(0, -.35, .05); t.rotation.x = -.25; tl.add(t); g.userData.hTail = tl; }
     const legs = []; for (const z of [-2.4, -3.6]) for (const s of [-1, 1]) { const lg = new THREE.Group(); lg.position.set(s*.2, 1.05, z + Z); lg.userData.part = 'horse'; horse.add(lg); const up = new THREE.Mesh(new THREE.BoxGeometry(.15, .55, .17), hide); up.position.y = -.25; lg.add(up); const lo = new THREE.Mesh(new THREE.BoxGeometry(.11, .55, .12), hide); lo.position.y = -.78; lo.castShadow = true; lg.add(lo); const hoof = new THREE.Mesh(new THREE.BoxGeometry(.13, .1, .15), M.dark); hoof.position.y = -1.03; lg.add(hoof); legs.push(lg); }
@@ -2223,7 +2223,19 @@
       if (player.userData.legs) {
         const P = player.userData; P.phase = (P.phase || 0) + Math.abs(G.speed)*dt*2.2; const amp = Math.min(1, Math.abs(G.speed)/2)*.55;
         P.legs.forEach((lg, i) => lg.rotation.x = Math.sin(P.phase + (i % 2 ? Math.PI : 0) + (i > 1 ? .6 : 0))*amp);
-        if (P.head) P.head.rotation.x = Math.sin(P.phase*2)*.08*amp; if (P.hTail) P.hTail.rotation.z = Math.sin(G.time*3)*.3;
+        if (P.head) {   /* a live head: it nods with the gait, looks into the turn, and between times glances about, drops to sniff the road, tosses and shakes; the ears flick on their own */
+          const H = P.head, hg = P.hg || (P.hg = {t:0, dur:0, kind:'none', pitch:0, yaw:0}), mv = Math.abs(G.speed) > 1.5; hg.t += dt;
+          if (hg.t > hg.dur) { const r = Math.random(); hg.t = 0;
+            if (r < .35) { hg.kind = 'none'; hg.dur = rand(1.2, 3.5); hg.pitch = 0; hg.yaw = 0; }
+            else if (r < .6) { hg.kind = 'look'; hg.dur = rand(1, 2.4); hg.yaw = (Math.random() < .5 ? -1 : 1)*rand(.3, .7)*(mv ? .5 : 1); hg.pitch = rand(-.15, .1); }
+            else if (r < .75 && !mv) { hg.kind = 'graze'; hg.dur = rand(1.5, 3); hg.pitch = -.6; hg.yaw = rand(-.2, .2); }
+            else if (r < .9) { hg.kind = 'toss'; hg.dur = .6; hg.pitch = 0; hg.yaw = 0; }
+            else { hg.kind = 'shake'; hg.dur = .7; hg.pitch = .08; hg.yaw = 0; } }
+          let tp = hg.pitch, ty = hg.yaw; if (hg.kind === 'toss') tp = .5*Math.sin(hg.t/hg.dur*Math.PI); if (hg.kind === 'shake') ty = Math.sin(hg.t*38)*.28*(1 - hg.t/hg.dur); ty += -(G.head || 0)*.9;
+          const quick = hg.kind === 'toss' || hg.kind === 'shake'; P.hPitch = (P.hPitch || 0) + (tp - (P.hPitch || 0))*Math.min(1, dt*(quick ? 14 : 4)); P.hYawH = (P.hYawH || 0) + (ty - (P.hYawH || 0))*Math.min(1, dt*(quick ? 20 : 4));
+          H.rotation.x = Math.sin(P.phase*2)*.14*amp + Math.sin(P.phase)*.05*amp + P.hPitch; H.rotation.y = P.hYawH;
+          if (P.ears) for (const e of P.ears) { if (Math.random() < dt*.8) e.userData.f = .2; e.userData.f = Math.max(0, (e.userData.f || 0) - dt); e.rotation.z = e.userData.s*(.15 + (e.userData.f > 0 ? Math.sin(e.userData.f/.2*Math.PI)*.8 : 0)); } }
+        if (P.hTail) P.hTail.rotation.z = Math.sin(G.time*3)*.3;
         if (P.cartWheels) for (const wg of P.cartWheels) wg.rotation.x -= G.speed*dt/.72;
         if (P.horse) { P.hYaw = (P.hYaw || 0) + ((-(G.head || 0)*1.1 + Math.sin(P.phase*.5)*.03*amp) - (P.hYaw || 0))*Math.min(1, dt*5); P.horse.rotation.y = P.hYaw; P.horse.position.y = Math.abs(Math.sin(P.phase))*.08*amp; P.horse.rotation.z = Math.sin(P.phase)*.05*amp; P.horse.rotation.x = Math.sin(P.phase*2 + 1)*.03*amp + (G.pvy || 0)*.02; }
         if (P.whipArm) { G.whipT = Math.max(0, (G.whipT || 0) - dt); P.whipArm.rotation.x = -.3 - Math.sin(Math.min(1, G.whipT/.35)*Math.PI)*1.2; }
