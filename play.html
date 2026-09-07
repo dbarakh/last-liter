@@ -305,7 +305,7 @@
     // ---- frame: front wings, rear quarters, cowl, rear deck lip, bulkheads, sills, arch lips
     // wings and quarters as extruded side panels with real wheel arches cut out
     const panel = (pts, s) => { const sh = new THREE.Shape(); pts.forEach((pt, i) => { if (pt.arc) sh.absarc(pt.arc[0], pt.arc[1], pt.arc[2], pt.arc[3], pt.arc[4], pt.arc[5]); else i ? sh.lineTo(pt[0], pt[1]) : sh.moveTo(pt[0], pt[1]); }); sh.closePath();
-      const m = new THREE.Mesh(new THREE.ExtrudeGeometry(sh, {depth:.3, bevelEnabled:false}), paint); m.rotation.y = Math.PI/2; m.position.x = s > 0 ? W/2 - .32 : -W/2 + .02; m.castShadow = true; m.userData.part = 'frame'; g.add(m); return m; };
+      const m = new THREE.Mesh(new THREE.ExtrudeGeometry(sh, {depth:.3, bevelEnabled:false, curveSegments:40}), paint); m.rotation.y = Math.PI/2; m.position.x = s > 0 ? W/2 - .32 : -W/2 + .02; m.castShadow = true; m.userData.part = 'frame'; g.add(m); return m; };
     for (let s of [-1, 1]) {
       panel([[2.1, SILL], [1.57, SILL], {arc:[1.21, SILL, .36, 0, Math.PI, false]}, [.85, SILL], [.86, SILL], [.86, BELT], [2.1, BELT]], s);            // front wing (shape x = -z)
       panel([[-.86, SILL], [-.85, SILL], {arc:[-1.21, SILL, .36, 0, Math.PI, false]}, [-1.57, SILL], [-2.1, SILL], [-2.1, BELT], [-.86, BELT]], s);   // rear quarter
@@ -341,7 +341,7 @@
     part = 'hood'; box(W - .36, .06, 1.44, paint, 0, .97, -1.42); box(.5, .025, 1.3, paint, 0, 1.005, -1.42);
     // ---- roof: tall glass house on thin pillars, flat roof, chrome window frames and gutters, C-pillar vents, steel rack
     part = 'roof';
-    box(W - .28, .48, 1.5, glass, 0, BELT + .24, .35);
+    box(W - .1, .48, 1.86, glass, 0, BELT + .24, .18);
     box(W - .34, .05, .7, glass, 0, BELT + .25, -.62, -.84); box(W - .34, .05, .62, glass, 0, BELT + .26, 1.1, 1.05);
     box(W - .12, .05, 1.54, paint, 0, BELT + .5, .35);
     for (let s of [-1, 1]) { const x = s*(W/2 - .12); box(.05, .7, .07, paint, x, BELT + .25, -.62, .73); box(.05, .46, .06, paint, x, BELT + .24, .3); box(.07, .62, .1, paint, x, BELT + .26, 1.1, -.52); box(.02, .03, 1.6, chrome, s*(W/2 - .06), BELT + .49, .35); box(.02, .05, .16, black, s*(W/2 - .12), BELT + .3, 1.02, -.52); }
