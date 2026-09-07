@@ -365,7 +365,7 @@
     // ---- doors (front) with chrome handles and mirrors; rear doors separately
     part = 'doors';
     for (let s of [-1, 1]) { const x = s*(W/2 - .03); box(.06, BELT - .26 - .04, .98, paint, x, (BELT + .26)/2, -.37); box(.03, .04, .14, chrome, s*(W/2 + .01), BELT - .2, -.05); box(.22, .03, .03, chrome, s*(W/2 + .08), BELT - .04, -.72); box(.03, .12, .03, chrome, s*(W/2 + .17), BELT + .01, -.72); box(.17, .11, .04, chrome, s*(W/2 + .17), BELT + .1, -.72); box(.15, .09, .01, std(0xbfd3e0, {roughness:.1, metalness:.8}), s*(W/2 + .17), BELT + .1, -.695); }
-    part = 'doorsR'; for (let s of [-1, 1]) { box(.06, BELT - .26 - .04, .92, paint, s*(W/2 - .03), (BELT + .26)/2, .62); box(.03, .04, .14, chrome, s*(W/2 + .01), BELT - .2, .9); }
+    part = 'doorsR'; for (let s of [-1, 1]) { const dr = panel([[-.16, .26], [-.805, .26], {arc:[-1.21, .37, .42, -.265, 1.256, false]}, [-1.08, .77], [-1.08, BELT - .02], [-.16, BELT - .02]], s); dr.position.x = s > 0 ? W/2 - .3 : -W/2; dr.userData.part = 'doorsR'; box(.03, .04, .14, chrome, s*(W/2 + .01), BELT - .2, .9); }   /* the rear door follows the arch: its trailing corner is cut on the same circle as the quarter panel */
     // ---- tail lamps: tall three-section clusters in the corners of the black panel
     part = 'lamps';
     for (let s of [-1, 1]) { box(.4, .26, .03, black, s*.55, .74, 2.1); box(.12, .22, .04, orange, s*.55 + s*.13, .74, 2.115); box(.12, .22, .04, tail, s*.55, .74, 2.115); box(.12, .22, .04, rev, s*.55 - s*.13, .74, 2.115); }
@@ -737,7 +737,7 @@
         { let snap = null; if (cut && d > cLo && d < cHi) snap = (d - cLo < cHi - d) ? cLo : cHi; else if ((edge || kerb || pave) && typeof crossings !== 'undefined') for (const cr of crossings) { const w = cr.half + (r.bike ? 0 : 3.5); if (Math.abs(d - cr.dist) < w) { snap = d < cr.dist ? cr.dist - w : cr.dist + w; break; } } if (snap !== null) { const p = sampleAt(snap); px = p.x; pz = p.z; py = p.y; c = Math.cos(p.th); sn = Math.sin(p.th); } }   /* inside a cut every point collapses onto the cut's exact edge, so the ribbon ends where it should and never pumps with the 2 m grid */
         const inRb = rbs && rbs.some(rb => S > rb.s0 - 1 && S < rbEndS(rb) + 1);
         let l0 = r.l0, l1 = r.l1, y = py + r.yOff;
-        if (r.bike && typeof crossings !== 'undefined' && crossings.some(cr => Math.abs(d - cr.dist) < cr.half + 4)) y = py + .21;   /* the bike path runs over the junction's own pavement right up to the cross street */
+        if (r.bike && typeof crossings !== 'undefined' && crossings.some(cr => Math.abs(d - cr.dist) < cr.half + 22.5)) y = py + .21;   /* the bike path runs over the junction's own pavement right up to the cross street */
         if (ground) { const ia = Math.max(0, i - 1), ib = Math.min(n - 1, i + 1), kk = (T.sth[ib] - T.sth[ia])/((ib - ia)*T.ds); if (Math.abs(kk) > 1e-4) { const R = Math.max(30, .85/Math.abs(kk)); if (kk > 0) l1 = Math.min(l1, R); else l0 = Math.max(l0, -R); } }   /* the inside of a bend is cut short of the turning radius: past it the cross-lines fold over each other and a far, higher slice of ground lands on top of the near road */
         if (road || edge || kerb || pave) { l0 *= T.bw[i]; l1 *= T.bw[i]; }
         if ((pave || kerb) && T.bp[i] < 1) y -= (1 - T.bp[i])*(r.yOff + .6);
@@ -1120,22 +1120,25 @@
   function updateWorkers(o, dt){
     if (!o.workers) return; if (o.dist + o.halfL < -15) { for (const w of o.workers) world.remove(w.m); o.workers = null; return; }
     const len = o.halfL*2;
+    if (o.throwCool > 0) o.throwCool -= dt;   /* one cooldown per crew, ticked once a frame, not once a worker */
     for (const w of o.workers) {
-      if (o.throwCool > 0) o.throwCool -= dt;
       w.t += dt; const wd = o.dist - o.halfL + w.u*len, wl = o.lat + w.off; if (w.rearm > 0) { w.rearm -= dt; if (w.rearm <= 0 && w.m.userData.shovel) w.m.userData.shovel.visible = true; }
-      const near = G.mode === 'drive' && Math.abs(G.speed) > 2 && wd > -2 && wd < 1.5 + Math.abs(G.speed)*.25 && Math.abs(wl - G.x) < 3.0;   /* the same last quarter of a second as a pedestrian */
-      if (near && !(w.dodge > 0)) { w.dodge = 1.5; w.away = Math.sign(wl - G.x) || (Math.random() < .5 ? -1 : 1); w.goal = null; w.off0 = w.off; w.offT = w.off + w.away*2.8;
-        if (w.m.userData.shovel && !(w.rearm > 0) && !(o.throwCool > 0) && Math.abs(wl - G.x) < 2.2) { o.throwCool = 6; const sv = w.m.userData.shovel; const wp = new THREE.Vector3(); sv.getWorldPosition(wp); const th = new THREE.Group(); const stick = new THREE.Mesh(new THREE.CylinderGeometry(.018, .018, 1.3, 6), std(0x8a6a3e)); th.add(stick); const blade = new THREE.Mesh(new THREE.BoxGeometry(.27, .3, .018), std(0x6f7276, {metalness:.6, roughness:.4})); blade.position.y = -.72; th.add(blade); th.position.copy(wp); th.rotation.z = Math.PI/2; scene.add(th); const dz = -wd, dxl = G.x - wl, L = Math.hypot(dxl, dz) || 1, sp = 9 + Math.abs(G.speed)*.5; launch(th, new THREE.Vector3(dxl/L*sp, 3.2 + wd*.15, -dz/L*sp), wd, wl); const db = debris[debris.length - 1]; db.shovel = true; db.life = 3; sv.visible = false; w.rearm = 4; sfx.whiff(); } }   /* the shovel flies at your windscreen first, then he leaps clear */   /* one leap sideways, headlong, then a moment on the ground */
+      const coming = G.mode === 'drive' && Math.abs(G.speed) > 2 && Math.abs(wl - G.x) < 2.6;
+      const near = coming && wd > -3 && wd < 1.5 + Math.abs(G.speed)*.25;   /* the same last quarter of a second as a pedestrian */
+      const far = coming && wd > 3 && wd < 4.5 + Math.abs(G.speed)*.45;     /* a few metres out: time to throw */
+      if (near && !(w.dodge > 0)) { w.dodge = 1; w.hop = 1; w.away = Math.sign(wl - G.x) || (Math.random() < .5 ? -1 : 1); w.goal = null; w.offT = w.off + w.away*3.4; }
+      if (far && !(w.dodge > 0)) {
+        if (w.m.userData.shovel && !(w.rearm > 0) && !(o.throwCool > 0)) { o.throwCool = 6; const sv = w.m.userData.shovel; const wp = new THREE.Vector3(); sv.getWorldPosition(wp); const th = new THREE.Group(); const stick = new THREE.Mesh(new THREE.CylinderGeometry(.018, .018, 1.3, 6), std(0x8a6a3e)); th.add(stick); const blade = new THREE.Mesh(new THREE.BoxGeometry(.27, .3, .018), std(0x6f7276, {metalness:.6, roughness:.4})); blade.position.y = -.72; th.add(blade); th.position.copy(wp); th.rotation.z = Math.PI/2; scene.add(th); const dz = -wd, dxl = G.x - wl, L = Math.hypot(dxl, dz) || 1, sp = 9 + Math.abs(G.speed)*.5; launch(th, new THREE.Vector3(dxl/L*sp, 2.0 + wd*.06, -dz/L*sp), wd, wl); const db = debris[debris.length - 1]; db.shovel = true; db.life = 3; sv.visible = false; w.rearm = 4; sfx.whiff(); } }   /* the shovel flies at your windscreen first, then he leaps clear */   /* one leap sideways, headlong, then a moment on the ground */
       let moving = false;
-      if (w.dodge > 0) { w.dodge -= dt; const jt = 1.5 - w.dodge, JT = .42; if (jt < JT) { const t = jt/JT; w.off = w.off0 + (w.offT - w.off0)*t; w.air = Math.sin(t*Math.PI)*.6; w.dive = 1; } else { w.off = w.offT; w.air = 0; w.dive = Math.max(0, 1 - (jt - JT)/.6); } moving = false; }
+      if (w.dodge > 0) { const dirX = Math.sign(w.offT - w.off); w.off += dirX*(w.hop > 0 ? 7.5 : 1.6)*dt; w.hop = Math.max(0, w.hop - dt*2.2); if (dirX === 0 || (dirX > 0 && w.off >= w.offT) || (dirX < 0 && w.off <= w.offT)) { w.off = w.offT; w.dodge = 0; w.hop = 0; } moving = w.hop <= 0; }   /* the pedestrian's dodge, verbatim: a dive at 7.5 m/s while the hop lasts, then a jog to where he wanted to be */
       else if (Math.abs(w.off) > o.halfW - .5) { w.off += (Math.sign(w.off)*(o.halfW - .8) - w.off)*Math.min(1, dt*.9); moving = true; }
       else if (w.goal !== null) { const du = w.goal - w.u; if (Math.abs(du) < .01) w.goal = null; else { w.u += Math.sign(du)*Math.min(Math.abs(du), dt*.9/len); moving = true; w.dir = Math.sign(du); } }
       else if (Math.random() < dt*.05) w.goal = Math.max(.06, Math.min(.94, w.u + rand(-.12, .12)));
       w.u = Math.max(.04, Math.min(.96, w.u));
-      place(w.m, o.dist - o.halfL + w.u*len, o.lat + w.off, moving ? (w.dir > 0 ? 0 : Math.PI) : (w.face || (w.face = Math.random()*6.28)));
+      place(w.m, o.dist - o.halfL + w.u*len, o.lat + w.off, w.dodge > 0 ? -w.away*Math.PI/2 : moving ? (w.dir > 0 ? 0 : Math.PI) : (w.face || (w.face = Math.random()*6.28)));
       w.m.position.y += .03;
       const L = w.m.userData.limbs;
-      if (w.dodge > 0 && w.dive > 0) { w.m.rotation.x -= 1.35*w.dive; w.m.position.y += (w.air || 0) + .15*w.dive; L[1].rotation.x = -2.9*w.dive; L[3].rotation.x = -2.9*w.dive; L[0].rotation.x = .3*w.dive; L[2].rotation.x = .3*w.dive; if (w.m.userData.shovel) w.m.userData.shovel.rotation.x = -.2; }   /* the headlong dive: body flat, arms out, over the hump and down */
+      if (w.dodge > 0 && w.hop > 0) { const pr = 1 - w.hop; w.m.rotation.x -= 1.25*Math.min(1, pr*3 + .3); w.m.position.y += Math.sin(Math.min(1, pr)*Math.PI)*.75; L[1].rotation.x = -2.9; L[3].rotation.x = -2.9; L[0].rotation.x = .3; L[2].rotation.x = .3; if (w.m.userData.shovel) w.m.userData.shovel.rotation.x = -.2; }   /* the headlong dive: body flat, arms out, over the hump and down */
       else if (moving) { const sw = Math.sin(w.t*8)*.5; L[0].rotation.x = sw; L[2].rotation.x = -sw; L[1].rotation.x = -sw*.7; L[3].rotation.x = sw*.7; if (w.m.userData.shovel) w.m.userData.shovel.rotation.x = -.2; }
       else { const dig = Math.sin(w.t*2.6 + (w.u*20)); L[0].rotation.x = 0; L[2].rotation.x = 0; L[1].rotation.x = -.7 + dig*.45; L[3].rotation.x = -.7 + dig*.45; if (w.m.userData.shovel) { const sv = w.m.userData.shovel; sv.rotation.x = -1.2 + Math.max(0, dig)*.25; sv.position.z = -.25 - Math.max(0, dig)*.2; sv.position.y = 1.0 + Math.max(0, -dig)*.22; }   /* thrust the blade in, lever, lift: digging, not sweeping */ w.m.position.y -= Math.max(0, dig)*.06; }
       w.m.visible = o.mesh.visible !== false;
@@ -1263,7 +1266,7 @@
   function nextName(){ if (!nameBag.length) nameBag = NAMES.slice().sort(() => Math.random() - .5); return nameBag.pop(); }
   function genStation(){
     const r = Math.random(), s = {name:nextName()};
-    if (Math.random() < (G.damage >= 2 ? .38 : .16)) return {name:'У ТОЛЯНА', type:'service', n:2 + Math.floor(Math.random()*5), fuel:99, price:20, heal:3};   /* Tolyan's garage: three stages of bodywork for twenty litres, with its own queue */
+    if (Math.random() < (G.damage >= 2 ? .38 : .16)) return {name:'У ТОЛЯНА', type:'service', n:2 + Math.floor(Math.random()*5), fuel:99, price:7, heal:1, per:1.5};   /* Tolyan's garage: three stages of bodywork for twenty litres, with its own queue */
     if (r < .15) s.type = 'closed';
     else if (r < .30) { s.type = 'dry'; s.fuel = 0; }
     else if (r < .42) { s.type = 'quiet'; s.fuel = 2 + Math.floor(Math.random()*4); }
@@ -1319,7 +1322,7 @@
     return g;
   }
   function boardLines(s, revealed){
-    if (s.type === 'service') return [{text:'СЕРВИС «' + s.name + '»'}, {text:'Кузов: ' + s.heal + ' ступени за ' + s.price + ' л', color:'#1d4fb5'}];
+    if (s.type === 'service') return [{text:'СЕРВИС «' + s.name + '»'}, {text:'Кузов: ступень за ' + s.price + ' л', color:'#1d4fb5'}];
     const title = {text:'АЗС «' + s.name + '»'};
     if (s.type === 'closed') return [title, {text:'ЗАКРЫТО', color:'#b0261f'}];
     if (!revealed) return [title, {text:'Бензин: ?', color:'#5a3a1a'}];
@@ -1635,6 +1638,8 @@
     }
     for (let sx of [-1, 1]) for (let sz of [-1, 1]) { const up = sz < 0, th = sx > 0 ? (up ? 0 : 1.5*Math.PI) : (up ? .5*Math.PI : Math.PI); const q = new THREE.Mesh(new THREE.CircleGeometry(21, 20, th, Math.PI/2), crossAsphalt); q.rotation.x = -Math.PI/2; q.position.set(sx*6.6, .1, sz*HALF); q.receiveShadow = true; g.add(q); }
     const stop = new THREE.Mesh(new THREE.BoxGeometry(13, .02, .5), edgeMat); stop.position.set(0, .15, HALF + 4.9); g.add(stop);
+    { const sh = new THREE.Shape(); sh.moveTo(-.15, 0); sh.lineTo(.15, 0); sh.lineTo(.15, 2.2); sh.lineTo(.6, 2.2); sh.lineTo(0, 3.4); sh.lineTo(-.6, 2.2); sh.lineTo(-.15, 2.2); sh.closePath(); const ag = new THREE.ShapeGeometry(sh);
+      for (const zt of [HALF + 9.8, HALF + 21]) for (const x of LANES) { const a = new THREE.Mesh(ag, edgeMat); a.rotation.x = -Math.PI/2; a.position.set(x, .15, zt); g.add(a); } }   /* marking 1.18: a straight-ahead arrow in each lane, twice before the stop line */
     for (let k = -5; k <= 5; k++) for (let z of [HALF + 2.2, -HALF - 2.2]) { const zb = new THREE.Mesh(new THREE.BoxGeometry(.7, .02, 3.2), edgeMat); zb.position.set(k*1.2, .15, z); g.add(zb); }
     const lamps = [];
     for (let sd of [-1, 1]) { const pole = new THREE.Mesh(new THREE.CylinderGeometry(.1, .12, 5, 8), postMat); pole.position.set(sd*7.4, 2.5, HALF + 5.5); g.add(pole); const hd = new THREE.Mesh(new THREE.BoxGeometry(.5, 1.2, .4), std(0x222228)); hd.position.set(sd*7.4, 5.2, HALF + 5.5); g.add(hd); const r = new THREE.Mesh(new THREE.SphereGeometry(.16, 10, 8), lampRed); r.position.set(sd*7.4, 5.55, HALF + 5.72); g.add(r); const gr = new THREE.Mesh(new THREE.SphereGeometry(.16, 10, 8), lampGreen); gr.position.set(sd*7.4, 4.9, HALF + 5.72); g.add(gr); lamps.push({r, gr}); }
@@ -1859,7 +1864,7 @@
   function reveal(){
     const st = G.st, s = st.s; st.revealed = true; updateBoard();
     if (s.type === 'closed') return;
-    if (s.type === 'service') { announce('АВТОСЕРВИС', 'good', 1500, 'Толян чинит ' + s.heal + ' ступени за ' + s.price + ' литров'); return; }
+    if (s.type === 'service') { announce('АВТОСЕРВИС', 'good', 1500, 'Толян чинит по ступени за ' + s.price + ' литров, пока стоишь'); return; }
     if (s.fuel > 0) announce('БЕНЗИН ЕСТЬ', 'good', 1500, 'на «' + s.name + '», примерно на ' + s.fuel + ' машин');
     else announce('БЕНЗИНА НЕТ', 'bad', 1500, s.type === 'queue' ? 'очередь ждёт бензовоз, езжай дальше' : 'на «' + s.name + '» пусто');
   }
@@ -1867,8 +1872,8 @@
     const st = G.st; if (!st) return; const s = st.s, el = $('board');
     const cars = st.q.filter(e => !e.gone).length;
     let l2 = s.type === 'closed' ? 'Закрыто.' : !st.revealed ? (s.type === 'queue' ? 'очередь ' + cars + ' маш. · бензин: <b>?</b>' : 'пусто · бензин: <b>?</b>') : s.fuel > 0 ? 'бензина на <b>' + s.fuel + '</b> маш.' + (s.type === 'queue' ? ' · очередь ' + cars : '') : '<b>БЕНЗИНА НЕТ</b>';
-    if (s.type === 'service') l2 = 'ремонт <b>' + s.heal + '</b> ступени за <b>' + s.price + ' л</b> · очередь ' + cars;
-    if (st.filling > 0) l2 = (s.type === 'service' ? 'чиним… <b>' : 'заправляемся… <b>') + Math.round(st.filling/(s.type === 'service' ? 4.5 : 3)*100) + '%</b>';
+    if (s.type === 'service') l2 = 'ступень кузова за <b>' + s.price + '&thinsp;л</b> · стоишь — чинит · очередь ' + cars;
+    if (st.filling > 0) l2 = (s.type === 'service' ? 'чиним… <b>' : 'заправляемся… <b>') + Math.round(st.filling/(s.type === 'service' ? s.per : 3)*100) + '%</b>';
     el.innerHTML = (s.type === 'service' ? 'Сервис «' : 'АЗС «') + s.name + '»<br>' + l2;
     if (st.group.userData.board) st.group.userData.board.userData.redraw(boardLines(s, st.revealed));
   }
@@ -2025,11 +2030,11 @@
     // ---- the pump ----
     const head = cars[0];
     const playerAtPump = Math.abs(G.x - laneX) < 2.0 && Math.abs(G.speed) < 1 && pz > -6 && pz < 7.5 && (!head || head.z > pz + 1);   /* anywhere along the island, roughly in the lane, and standing still: that is at the pump */
-    if (s.type === 'service' && playerAtPump && !st.filled) {
-      if (G.damage <= 0) { st.filled = true; announce('КУЗОВ ЦЕЛ', '', 1300, 'чинить нечего, поезжай'); }
-      else if (G.fuel < s.price + 5) { st.filled = true; sfx.empty(); announce('НЕЧЕМ ПЛАТИТЬ', 'bad', 1500, 'Толян берёт бензином, нужно ' + s.price + ' литров'); }
-      else { st.filling += dt; if (st.group.userData.mech) st.group.userData.mech.position.y = Math.abs(Math.sin(G.time*6))*.08; if (st.filling >= 4.5) { st.filled = true; st.filling = 0; G.fuel = Math.max(1, G.fuel - s.price); repairCar(s.heal); sfx.fuel(); flash('.35', '#7ad37a'); announce('КУЗОВ ПОДЛАТАН', 'good', 1500, 'минус ' + s.price + ' литров, поезжай'); prompt(drivePrompt()); } }
-    } else if (s.type === 'service') st.filling = 0;
+    if (s.type === 'service' && playerAtPump) {   /* Tolyan works by the stage for as long as you stand there: each one costs its litres, and you can drive off whenever */
+      if (G.damage <= 0) { if (!st.told) { st.told = true; announce('КУЗОВ ЦЕЛ', '', 1300, 'чинить нечего, поезжай'); } st.filling = 0; }
+      else if (G.fuel < s.price + 3) { if (!st.told) { st.told = true; sfx.empty(); announce('НЕЧЕМ ПЛАТИТЬ', 'bad', 1500, 'Толян берёт бензином, нужно ' + s.price + ' литров'); } st.filling = 0; }
+      else { st.filling += dt; if (st.group.userData.mech) st.group.userData.mech.position.y = Math.abs(Math.sin(G.time*6))*.08; if (st.filling >= s.per) { st.filling = 0; G.fuel = Math.max(1, G.fuel - s.price); repairCar(1); sfx.fuel(); flash('.25', '#7ad37a'); announce(G.damage > 0 ? 'СТУПЕНЬ ПОДЛАТАНА' : 'КУЗОВ ЦЕЛ', 'good', 1200, 'минус ' + s.price + ' литров' + (G.damage > 0 ? ', стой дальше или поезжай' : ', поезжай')); if (G.damage <= 0) st.told = true; prompt(drivePrompt()); } }
+    } else if (s.type === 'service') { st.filling = 0; st.told = false; }
     else if (canFill && playerAtPump && !st.filled) {
       if (s.fuel > 0) { st.filling += dt; if (st.filling >= 3) { st.filled = true; st.filling = 0; G.fuel = G.maxFuel; G.fills++; s.fuel--; sfx.fuel(); G.empty = false; flash('.35', '#7ad37a'); announce('ПОЛНЫЙ БАК', 'good', 1500, 'поезжай');   /* a fill is a full tank: the bar says so too */ prompt(drivePrompt()); } }
       else if (!st.noFuelTold) { st.noFuelTold = true; sfx.empty(); announce('КОЛОНКА ПУСТАЯ', 'bad', 1400, 'здесь ничего не нальют'); }
